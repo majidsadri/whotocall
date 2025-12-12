@@ -404,169 +404,149 @@ export default function FindContact() {
 
           {results.map((contact, index) => {
             const isTopMatch = index === 0;
-            const matchQuality = getMatchQuality(contact._score || 0, isTopMatch);
-            const MatchIcon = matchQuality.icon;
+
+            // Generate LinkedIn search URL
+            const linkedinSearchUrl = contact.linkedin_url ||
+              `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(
+                `${contact.name}${contact.company ? ' ' + contact.company : ''}`
+              )}`;
 
             return (
               <div
                 key={contact.id}
                 className={`card overflow-hidden transition-all ${
                   isTopMatch
-                    ? 'ring-2 ring-yellow-400/50 shadow-lg shadow-yellow-100'
-                    : 'hover:border-gray-300'
+                    ? 'ring-1 ring-green-200 shadow-md'
+                    : 'hover:shadow-md'
                 }`}
               >
-                {/* Match Quality Banner for Top Result */}
-                {isTopMatch && (
-                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 px-4 py-2 border-b border-yellow-100 flex items-center gap-2">
-                    <Crown size={14} className="text-yellow-600" />
-                    <span className="text-xs font-semibold text-yellow-700">Best Match for "{query}"</span>
-                  </div>
-                )}
-
                 {/* Header */}
-                <div className="p-4 pb-3">
-                  <div className="flex items-start gap-3">
+                <div className="p-4">
+                  <div className="flex items-start gap-4">
                     {/* Avatar */}
                     {contact.enrichment?.avatar ? (
                       <img
                         src={contact.enrichment.avatar}
                         alt={contact.name}
-                        className={`w-12 h-12 rounded-xl object-cover flex-shrink-0 ${isTopMatch ? 'ring-2 ring-yellow-400' : ''}`}
+                        className="w-14 h-14 rounded-full object-cover flex-shrink-0 border-2 border-gray-100"
                       />
                     ) : (
-                      <div className={`w-12 h-12 bg-gradient-to-br ${getAvatarColor(contact.name)} rounded-xl flex items-center justify-center text-white font-semibold text-lg flex-shrink-0 ${isTopMatch ? 'ring-2 ring-yellow-400' : ''}`}>
+                      <div className={`w-14 h-14 bg-gradient-to-br ${getAvatarColor(contact.name)} rounded-full flex items-center justify-center text-white font-semibold text-xl flex-shrink-0`}>
                         {contact.name?.charAt(0) || '?'}
                       </div>
                     )}
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900 truncate">{contact.name}</h3>
-                            {!isTopMatch && MatchIcon && (
-                              <MatchIcon size={12} className="text-gray-400 flex-shrink-0" />
-                            )}
-                          </div>
-                          {(contact.role || contact.enrichment?.employment?.title) && (
-                            <p className="text-sm text-gray-500 truncate">
-                              {contact.enrichment?.employment?.title || contact.role}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {contact.linkedin_url ? (
-                            <a
-                              href={contact.linkedin_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-8 h-8 flex items-center justify-center text-[#0A66C2] hover:bg-blue-50 rounded-lg transition-colors"
-                            >
-                              <Linkedin size={16} />
-                            </a>
-                          ) : (
-                            <button
-                              onClick={() => searchWeb(contact)}
-                              disabled={contact._isSearchingWeb}
-                              className="h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
-                              title="Find LinkedIn & web info"
-                            >
-                              {contact._isSearchingWeb ? (
-                                <Loader2 size={14} className="animate-spin" />
-                              ) : (
-                                <Globe size={14} />
-                              )}
-                              <span className="hidden sm:inline">Find</span>
-                            </button>
-                          )}
-                          {!contact.enrichment && contact.company && (
-                            <button
-                              onClick={() => enrichContact(contact)}
-                              disabled={enrichingId === contact.id}
-                              className="h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50"
-                            >
-                              {enrichingId === contact.id ? (
-                                <Loader2 size={14} className="animate-spin" />
-                              ) : (
-                                <Sparkles size={14} />
-                              )}
-                              <span className="hidden sm:inline">Enrich</span>
-                            </button>
-                          )}
-                          {contact.enrichment?.twitter_handle && (
-                            <a
-                              href={`https://twitter.com/${contact.enrichment.twitter_handle}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#1DA1F2] hover:bg-blue-50 rounded-lg transition-colors"
-                            >
-                              <Twitter size={14} />
-                            </a>
-                          )}
-                        </div>
+                      {/* Name and LinkedIn */}
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-semibold text-gray-900 text-lg truncate">{contact.name}</h3>
+                        <a
+                          href={linkedinSearchUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-2 py-1 bg-[#0A66C2] text-white text-xs font-medium rounded hover:bg-[#004182] transition-colors flex-shrink-0"
+                          title={contact.linkedin_url ? 'View LinkedIn Profile' : 'Search on LinkedIn'}
+                        >
+                          <Linkedin size={12} />
+                          <span>LinkedIn</span>
+                        </a>
+                        {isTopMatch && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-semibold rounded-full flex-shrink-0">
+                            Best Match
+                          </span>
+                        )}
                       </div>
+
+                      {/* Role at Company */}
+                      <p className="text-sm text-gray-600 mb-2">
+                        {(contact.enrichment?.employment?.title || contact.role) && (
+                          <span className="font-medium">{contact.enrichment?.employment?.title || contact.role}</span>
+                        )}
+                        {(contact.enrichment?.employment?.title || contact.role) && (contact.company || contact.enrichment?.company_info?.name) && (
+                          <span className="text-gray-400"> at </span>
+                        )}
+                        {(contact.company || contact.enrichment?.company_info?.name) && (
+                          <span className="font-medium">{contact.enrichment?.company_info?.name || contact.company}</span>
+                        )}
+                      </p>
+
+                      {/* Key Info Row */}
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                        {(contact.location || contact.meeting_location || contact.enrichment?.company_info?.location) && (
+                          <span className="flex items-center gap-1">
+                            <MapPin size={12} className="text-gray-400" />
+                            {contact.location || contact.meeting_location || contact.enrichment?.company_info?.location}
+                          </span>
+                        )}
+                        {(contact.industry || contact.enrichment?.company_info?.industry) && (
+                          <span className="flex items-center gap-1">
+                            <Briefcase size={12} className="text-gray-400" />
+                            {contact.enrichment?.company_info?.industry || contact.industry}
+                          </span>
+                        )}
+                        {(contact.met_date || contact.created_at) && (
+                          <span className="flex items-center gap-1">
+                            <Calendar size={12} className="text-gray-400" />
+                            Met {formatDate(contact.met_date || contact.created_at)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-1 flex-shrink-0">
+                      {!contact.enrichment && contact.company && (
+                        <button
+                          onClick={() => enrichContact(contact)}
+                          disabled={enrichingId === contact.id}
+                          className="h-8 px-3 flex items-center gap-1.5 text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50"
+                          title="Enrich with more data"
+                        >
+                          {enrichingId === contact.id ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : (
+                            <Sparkles size={12} />
+                          )}
+                          <span>Enrich</span>
+                        </button>
+                      )}
+                      {contact.enrichment?.twitter_handle && (
+                        <a
+                          href={`https://twitter.com/${contact.enrichment.twitter_handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="h-8 px-3 flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <Twitter size={12} />
+                          <span>Twitter</span>
+                        </a>
+                      )}
                     </div>
                   </div>
 
-                  {/* Match Reason Badges */}
-                  {contact._matchReason && (
-                    <div className="flex items-center gap-2 mt-3">
-                      <span className="text-[10px] text-gray-400 uppercase tracking-wide">Matched:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {contact._matchedFields?.map((field) => (
-                          <span
-                            key={field}
-                            className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded font-medium"
-                          >
-                            {field}
-                          </span>
-                        ))}
-                      </div>
+                  {/* Contact Info (if available) */}
+                  {(contact.email || contact.phone) && (
+                    <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-gray-100 text-xs">
+                      {contact.email && (
+                        <a href={`mailto:${contact.email}`} className="text-blue-600 hover:underline">
+                          {contact.email}
+                        </a>
+                      )}
+                      {contact.phone && (
+                        <a href={`tel:${contact.phone.replace(/[^0-9+]/g, '')}`} className="text-gray-600 hover:text-gray-900">
+                          {contact.phone}
+                        </a>
+                      )}
                     </div>
                   )}
 
-                  {/* Meta */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 text-xs text-gray-500">
-                    {(contact.company || contact.enrichment?.company_info?.name) && (
-                      <span className="flex items-center gap-1.5">
-                        <Building2 size={12} className="text-gray-400" />
-                        {contact.enrichment?.company_info?.name || contact.company}
-                      </span>
-                    )}
-                    {(contact.location || contact.meeting_location || contact.enrichment?.company_info?.location) && (
-                      <span className="flex items-center gap-1.5">
-                        <MapPin size={12} className="text-gray-400" />
-                        {contact.meeting_location || contact.enrichment?.company_info?.location || contact.location}
-                      </span>
-                    )}
-                    {(contact.industry || contact.enrichment?.company_info?.industry) && (
-                      <span className="flex items-center gap-1.5">
-                        <Briefcase size={12} className="text-gray-400" />
-                        {contact.enrichment?.company_info?.industry || contact.industry}
-                      </span>
-                    )}
-                    {contact.enrichment?.company_info?.employees_range && (
-                      <span className="flex items-center gap-1.5">
-                        <Users size={12} className="text-gray-400" />
-                        {contact.enrichment.company_info.employees_range}
-                      </span>
-                    )}
-                    {(contact.met_date || contact.created_at) && (
-                      <span className="flex items-center gap-1.5">
-                        <Calendar size={12} className="text-gray-400" />
-                        {formatDate(contact.met_date || contact.created_at)}
-                      </span>
-                    )}
-                  </div>
-
                   {/* Priority Bar */}
                   {contact.priority !== undefined && contact.priority > 0 && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <Star size={12} className="text-green-500" />
+                    <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+                      <span className="text-[10px] text-gray-400 uppercase tracking-wide">Priority</span>
                       <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-green-200 via-green-400 to-green-600 transition-all duration-200"
+                          className="h-full bg-gradient-to-r from-green-300 to-green-500 transition-all duration-200"
                           style={{ width: `${contact.priority}%` }}
                         />
                       </div>
@@ -795,35 +775,39 @@ export default function FindContact() {
                   </div>
                 )}
 
-                {/* Tags */}
-                {contact.tags && contact.tags.length > 0 && (
-                  <div className="px-4 pb-3">
-                    <div className="flex flex-wrap gap-1.5">
-                      {contact.tags.slice(0, 8).map((tag, i) => {
-                        const colors = ['tag', 'tag-blue', 'tag-purple', 'tag-orange'];
-                        return <span key={i} className={colors[i % colors.length]}>{tag}</span>;
-                      })}
-                      {contact.tags.length > 8 && (
-                        <span className="tag-gray">+{contact.tags.length - 8}</span>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* Tags and Context */}
+                {(contact.tags?.length > 0 || contact.raw_context || contact.event_type) && (
+                  <div className="px-4 pb-4 border-t border-gray-50">
+                    {/* Tags */}
+                    {contact.tags && contact.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-3">
+                        {contact.tags.slice(0, 6).map((tag, i) => (
+                          <span key={i} className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                            {tag}
+                          </span>
+                        ))}
+                        {contact.tags.length > 6 && (
+                          <span className="text-[11px] px-2 py-0.5 bg-gray-50 text-gray-400 rounded-full">
+                            +{contact.tags.length - 6} more
+                          </span>
+                        )}
+                      </div>
+                    )}
 
-                {/* Context */}
-                {contact.raw_context && (
-                  <div className="px-4 pb-4">
-                    <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
-                      <MessageCircle size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-gray-500 line-clamp-2 italic">"{contact.raw_context}"</p>
-                    </div>
-                  </div>
-                )}
+                    {/* Context/Notes */}
+                    {contact.raw_context && (
+                      <div className="mt-3 flex items-start gap-2">
+                        <MessageCircle size={12} className="text-gray-300 mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-gray-400 italic line-clamp-2">"{contact.raw_context}"</p>
+                      </div>
+                    )}
 
-                {/* Event badge */}
-                {contact.event_type && (
-                  <div className="px-4 pb-4">
-                    <span className="tag-gray">{contact.event_type}</span>
+                    {/* Event */}
+                    {contact.event_type && !contact.raw_context && (
+                      <div className="mt-3 text-xs text-gray-400">
+                        {contact.event_type}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -834,19 +818,18 @@ export default function FindContact() {
 
       {/* Empty state */}
       {!hasSearched && (
-        <div className="card p-12 text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Search className="text-gray-400" size={28} />
+        <div className="card p-10 text-center">
+          <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="text-gray-400" size={24} />
           </div>
-          <p className="font-medium text-gray-700">Search your network</p>
-          <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
-            Find contacts by name, company, industry, location, or any tag
+          <p className="font-semibold text-gray-800">Search your contacts</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Name, company, industry, or tags
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <span className="tag">real estate</span>
-            <span className="tag-blue">phoenix</span>
-            <span className="tag-purple">investor</span>
-            <span className="tag-orange">tech</span>
+            <span className="text-xs px-3 py-1 bg-gray-100 text-gray-500 rounded-full">real estate</span>
+            <span className="text-xs px-3 py-1 bg-gray-100 text-gray-500 rounded-full">investor</span>
+            <span className="text-xs px-3 py-1 bg-gray-100 text-gray-500 rounded-full">tech</span>
           </div>
         </div>
       )}

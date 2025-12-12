@@ -39,30 +39,30 @@ export default function Home() {
       </header>
 
       {/* Navigation Tabs */}
-      <div className="glass border-b border-gray-100">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-xl mx-auto px-4">
-          <div className="flex gap-1 py-2">
+          <div className="flex">
             <button
               onClick={() => setActiveTab('add')}
-              className={`flex-1 h-11 flex items-center justify-center gap-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+              className={`flex-1 h-12 flex items-center justify-center gap-2 text-sm font-medium border-b-2 transition-all ${
                 activeTab === 'add'
-                  ? 'bg-green-50 text-green-700 shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              <Plus size={16} />
-              Add Contact
+              <Plus size={18} />
+              Add
             </button>
             <button
               onClick={() => setActiveTab('find')}
-              className={`flex-1 h-11 flex items-center justify-center gap-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+              className={`flex-1 h-12 flex items-center justify-center gap-2 text-sm font-medium border-b-2 transition-all ${
                 activeTab === 'find'
-                  ? 'bg-green-50 text-green-700 shadow-sm'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              <Search size={16} />
-              Find Contact
+              <Search size={18} />
+              Search
             </button>
           </div>
         </div>

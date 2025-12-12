@@ -1,6 +1,96 @@
 {
   "contacts": [
     {
+      "name": "Olivia Wilson",
+      "email": "hello@reallygreatsite.com",
+      "phone": "+123-456-7890",
+      "company": "Not specified",
+      "role": "Real Estate Agent",
+      "location": "Irvine, CA, USA",
+      "industry": "Real Estate",
+      "event_type": "met at Irvine promenade",
+      "met_date": "2025-12-12",
+      "tags": [
+        "real estate",
+        "property",
+        "housing",
+        "homes",
+        "realty",
+        "luxury homes",
+        "first-time buyers",
+        "agent",
+        "potential client",
+        "referral source",
+        "friendly",
+        "detail-oriented",
+        "networker",
+        "alaska",
+        "california market",
+        "southwest us",
+        "property investment",
+        "real estate market",
+        "home buying",
+        "residential real estate"
+      ],
+      "raw_context": "met olivis in Irvine promenade, she is in to real estate. she is from Alaska.",
+      "id": "c_mj3et047erzewz906",
+      "created_at": "2025-12-12T21:59:00.823Z"
+    },
+    {
+      "name": "Jimmy Amash",
+      "email": "jimmy.amash@tryrobin.com",
+      "phone": "D: (949) 529-9246, O: (949) 296-4075",
+      "company": "Robin",
+      "role": "Co-founder, CEO",
+      "location": "Irvine, CA",
+      "industry": "restaurant and food business",
+      "event_type": "met at Irvine promenade",
+      "met_date": "2025-12-12",
+      "tags": [
+        "restaurant",
+        "food industry",
+        "food tech",
+        "startup",
+        "entrepreneurship",
+        "founder",
+        "executive",
+        "potential client",
+        "strategic partner",
+        "friendly",
+        "networker",
+        "startups",
+        "california",
+        "southern california",
+        "food service",
+        "catering"
+      ],
+      "raw_context": "met jimmy in Irvine promenade, he has a startup in restaurant and food business. the glass broke while we were talking",
+      "id": "c_mj3e66vlqucrqb7p9",
+      "created_at": "2025-12-12T21:41:16.497Z",
+      "priority": 90,
+      "enrichment": {
+        "enriched_at": "2025-12-12T22:00:01.670Z",
+        "linkedin_handle": "",
+        "twitter_handle": "",
+        "employment": {
+          "title": "",
+          "role": "",
+          "seniority": ""
+        },
+        "company_info": {
+          "name": "Robin",
+          "domain": "tryrobin.com",
+          "description": " company in ",
+          "location": "",
+          "employees_range": "",
+          "industry": "",
+          "sector": "",
+          "linkedin_handle": "",
+          "twitter_handle": ""
+        }
+      }
+    },
+    {
       "name": "Majid Sadri",
       "email": "majid.sadri@evolus.com",
       "phone": "949.558.4019",
@@ -156,7 +246,28 @@
       ],
       "raw_context": "I met this guy in promenade Irvine and he started a startup food restaurant related and he is plastiniane, and some glasses was broken at the bar",
       "id": "c_mj0sp2k7zc21lvgtc",
-      "created_at": "2025-12-11T02:04:33.463Z"
+      "created_at": "2025-12-11T02:04:33.463Z",
+      "enrichment": {
+        "enriched_at": "2025-12-12T21:49:07.017Z",
+        "linkedin_handle": "",
+        "twitter_handle": "",
+        "employment": {
+          "title": "",
+          "role": "",
+          "seniority": ""
+        },
+        "company_info": {
+          "name": "Robin",
+          "domain": "tryrobin.com",
+          "description": " company in ",
+          "location": "",
+          "employees_range": "",
+          "industry": "",
+          "sector": "",
+          "linkedin_handle": "",
+          "twitter_handle": ""
+        }
+      }
     }
   ]
 }

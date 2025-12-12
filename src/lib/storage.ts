@@ -155,6 +155,24 @@ export function searchContacts(query: string): SearchResultWithScore[] {
     .sort((a, b) => b.score - a.score);
 }
 
+export function getContactById(id: string): Contact | null {
+  const contacts = getContacts();
+  return contacts.find(c => c.id === id) || null;
+}
+
+export function deleteContact(id: string): boolean {
+  ensureDataDir();
+  const contacts = getContacts();
+  const index = contacts.findIndex(c => c.id === id);
+
+  if (index === -1) return false;
+
+  contacts.splice(index, 1);
+  fs.writeFileSync(DATA_FILE, JSON.stringify({ contacts }, null, 2));
+
+  return true;
+}
+
 function generateId(): string {
   return 'c_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
