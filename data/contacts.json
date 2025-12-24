@@ -1,6 +1,38 @@
 {
   "contacts": [
     {
+      "name": "Jimmy Amash",
+      "email": "jimmy.amash@tryrobin.com",
+      "phone": "(949) 529-9246",
+      "company": "Robin",
+      "role": "Co-founder, CEO",
+      "location": "",
+      "industry": "technology",
+      "event_type": "",
+      "met_date": "2025-12-23",
+      "tags": [
+        "technology",
+        "startup",
+        "software",
+        "entrepreneurship",
+        "innovation",
+        "founder",
+        "executive",
+        "strategic partner",
+        "networker",
+        "detail-oriented",
+        "business development",
+        "venture capital",
+        "funding",
+        "investment",
+        "digital solutions",
+        "tech startups"
+      ],
+      "raw_context": "",
+      "id": "c_mjj1rxjqhtrsosxn1",
+      "created_at": "2025-12-23T20:38:34.646Z"
+    },
+    {
       "name": "Olivia Wilson",
       "email": "hello@reallygreatsite.com",
       "phone": "+123-456-7890",
@@ -121,7 +153,7 @@
         "software development",
         "system administration"
       ],
-      "raw_context": "His name is Majid Sardi. He does DevOps, AWS, Cloud. He's living in Aliso Viejo, Orange County, California. he has cat \nشیراز",
+      "raw_context": "His name is Majid Sardi. He does DevOps, AWS, Cloud. He's living in Aliso Viejo, Orange County, California. he has cat \n\u0634\u06cc\u0631\u0627\u0632",
       "id": "c_mj0u5h0n7ymtfaa9r",
       "created_at": "2025-12-11T02:45:18.311Z",
       "enrichment": {
@@ -268,6 +300,106 @@
           "twitter_handle": ""
         }
       }
+    },
+    {
+      "name": "Unknown",
+      "email": null,
+      "phone": null,
+      "company": null,
+      "role": null,
+      "industry": null,
+      "location": null,
+      "linkedin_url": null,
+      "tags": [
+        "contact"
+      ],
+      "raw_context": "Met in promenade Irvine",
+      "met_date": "2025-12-23",
+      "meeting_location": "Irvine, CA",
+      "priority": 63,
+      "id": "a8c0a88c-b3ab-442f-9411-8dec42bc635d",
+      "created_at": "2025-12-23T14:11:23.567484",
+      "updated_at": "2025-12-23T14:11:23.567501"
+    },
+    {
+      "name": "Unknown",
+      "email": null,
+      "phone": null,
+      "company": null,
+      "role": null,
+      "industry": null,
+      "location": null,
+      "linkedin_url": null,
+      "tags": [
+        "contact"
+      ],
+      "raw_context": "Test",
+      "met_date": "2025-12-23",
+      "meeting_location": "Irvine, CA",
+      "priority": 50,
+      "id": "7613ad2c-f4d8-4254-994f-3a98f0a99682",
+      "created_at": "2025-12-23T14:11:38.577344",
+      "updated_at": "2025-12-23T14:11:38.577370"
+    },
+    {
+      "name": "Unknown",
+      "email": null,
+      "phone": null,
+      "company": null,
+      "role": null,
+      "industry": null,
+      "location": null,
+      "linkedin_url": null,
+      "tags": [
+        "contact"
+      ],
+      "raw_context": "\n",
+      "met_date": "2025-12-23",
+      "meeting_location": "Cupertino, California",
+      "priority": 50,
+      "id": "c38bd4c6-5668-4838-90da-55caa3cc6869",
+      "created_at": "2025-12-23T15:54:54.671858",
+      "updated_at": "2025-12-23T15:54:54.671881"
+    },
+    {
+      "name": "Unknown",
+      "email": null,
+      "phone": null,
+      "company": null,
+      "role": null,
+      "industry": null,
+      "location": null,
+      "linkedin_url": null,
+      "tags": [
+        "contact"
+      ],
+      "raw_context": "Irvine spectrum startup tool",
+      "met_date": "2025-12-24",
+      "meeting_location": "Cupertino, California",
+      "priority": 50,
+      "id": "fe4a2cf3-0923-452e-9180-dc5274961bd0",
+      "created_at": "2025-12-23T16:06:41.475594",
+      "updated_at": "2025-12-23T16:06:41.475619"
+    },
+    {
+      "name": "Unknown",
+      "email": null,
+      "phone": null,
+      "company": null,
+      "role": null,
+      "industry": null,
+      "location": null,
+      "linkedin_url": null,
+      "tags": [
+        "contact"
+      ],
+      "raw_context": "Jimmy startup Irvine",
+      "met_date": "2025-12-24",
+      "meeting_location": "Cupertino, California",
+      "priority": 50,
+      "id": "93e5e418-82d4-4ecd-a94c-2e9ba1cbdb31",
+      "created_at": "2025-12-23T16:10:42.024155",
+      "updated_at": "2025-12-23T16:10:42.024170"
     }
   ]
 }
