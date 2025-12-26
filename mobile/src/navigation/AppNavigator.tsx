@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Text, Animated, Easing } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Feather';
@@ -22,12 +22,105 @@ interface TabIconProps {
 }
 
 function TabIcon({ focused, iconName, label }: TabIconProps) {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0.5)).current;
+  const scaleAnim = useRef(new Animated.Value(focused ? 1 : 0.9)).current;
+
+  useEffect(() => {
+    if (focused) {
+      // Scale up animation
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        tension: 100,
+        useNativeDriver: true,
+      }).start();
+
+      // Continuous pulse animation for the glow ring
+      const pulseLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.15,
+            duration: 1200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      // Glow opacity animation
+      const glowLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 0.8,
+            duration: 1200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowAnim, {
+            toValue: 0.4,
+            duration: 1200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      pulseLoop.start();
+      glowLoop.start();
+
+      return () => {
+        pulseLoop.stop();
+        glowLoop.stop();
+      };
+    } else {
+      // Scale down for inactive
+      Animated.spring(scaleAnim, {
+        toValue: 0.9,
+        friction: 4,
+        tension: 100,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [focused]);
+
   if (focused) {
     return (
       <View style={styles.activeTabContainer}>
-        <View style={styles.activeIconContainer}>
-          <Icon name={iconName} size={22} color={colors.white} />
-        </View>
+        {/* Outer pulsing glow ring */}
+        <Animated.View
+          style={[
+            styles.glowRing,
+            {
+              transform: [{ scale: pulseAnim }],
+              opacity: glowAnim,
+            },
+          ]}
+        />
+        {/* Inner glow ring */}
+        <Animated.View
+          style={[
+            styles.innerGlowRing,
+            {
+              opacity: glowAnim,
+            },
+          ]}
+        />
+        {/* Main icon container */}
+        <Animated.View
+          style={[
+            styles.activeIconContainer,
+            { transform: [{ scale: scaleAnim }] },
+          ]}
+        >
+          <Icon name={iconName} size={24} color={colors.white} />
+        </Animated.View>
         <Text style={styles.activeLabel}>{label}</Text>
       </View>
     );
@@ -35,9 +128,14 @@ function TabIcon({ focused, iconName, label }: TabIconProps) {
 
   return (
     <View style={styles.inactiveTabContainer}>
-      <View style={styles.inactiveIconContainer}>
+      <Animated.View
+        style={[
+          styles.inactiveIconContainer,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
         <Icon name={iconName} size={22} color={colors.gray[400]} />
-      </View>
+      </Animated.View>
       <Text style={styles.inactiveLabel}>{label}</Text>
     </View>
   );
@@ -93,6 +191,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    width: 80,
+    height: 70,
+  },
+  glowRing: {
+    position: 'absolute',
+    top: 0,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primary,
+    shadowColor: colors.cyan[400],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+  },
+  innerGlowRing: {
+    position: 'absolute',
+    top: 4,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.purple[500],
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
   },
   activeIconContainer: {
     width: 52,
@@ -101,22 +225,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 10,
+    borderWidth: 2,
+    borderColor: colors.cyan[400],
+    shadowColor: colors.cyan[400],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 16,
+    elevation: 12,
+    zIndex: 10,
   },
   activeLabel: {
     fontSize: 12,
     fontWeight: '700',
     color: colors.cyan[400],
     letterSpacing: 0.5,
+    textShadowColor: colors.cyan[400],
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+    marginTop: 2,
   },
   inactiveTabContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    width: 80,
+    height: 70,
   },
   inactiveIconContainer: {
     width: 48,
@@ -125,7 +258,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surfaceElevated,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
   inactiveLabel: {

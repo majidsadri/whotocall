@@ -187,9 +187,9 @@ export default function AddContactScreen() {
 
   // Get priority info
   const getPriorityInfo = (value: number) => {
-    if (value >= 67) return { label: 'High', color: colors.green[700] };
-    if (value >= 34) return { label: 'Medium', color: colors.green[500] };
-    return { label: 'Low', color: colors.green[400] };
+    if (value >= 67) return { label: 'High', color: colors.purple[500] };
+    if (value >= 34) return { label: 'Medium', color: colors.cyan[500] };
+    return { label: 'Low', color: colors.cyan[700] };
   };
 
   // Success screen
@@ -373,7 +373,7 @@ export default function AddContactScreen() {
         <View style={commonStyles.card}>
           <View style={commonStyles.cardHeader}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: colors.green[500] }]}>
+              <View style={[styles.iconBox, { backgroundColor: colors.cyan[600] }]}>
                 <Icon name="mic" size={14} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -406,7 +406,7 @@ export default function AddContactScreen() {
               </View>
               {recordingPath && !isTranscribing && (
                 <View style={styles.recordingDone}>
-                  <Icon name="check" size={14} color={colors.green[600]} />
+                  <Icon name="check" size={14} color={colors.cyan[400]} />
                   <Text style={styles.recordingDoneText}>Done</Text>
                 </View>
               )}
@@ -448,7 +448,7 @@ export default function AddContactScreen() {
                 </TouchableOpacity>
                 {isOcrProcessing && (
                   <View style={styles.imageOverlay}>
-                    <ActivityIndicator color={colors.green[500]} size="large" />
+                    <ActivityIndicator color={colors.cyan[400]} size="large" />
                   </View>
                 )}
                 {cardText && (
@@ -695,17 +695,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.green[900],
+    backgroundColor: colors.cyan[900],
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.green[700],
+    borderColor: colors.cyan[700],
   },
   recordingDoneText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.green[400],
+    color: colors.cyan[400],
   },
   uploadButton: {
     borderWidth: 3,
@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
   },
   tagCount: {
     fontSize: 12,
-    color: colors.green[600],
+    color: colors.cyan[400],
     fontWeight: '500',
     marginLeft: 8,
   },

@@ -215,11 +215,13 @@ export const commonStyles = StyleSheet.create({
   },
 
   badgeGreen: {
-    backgroundColor: colors.green[900],
+    backgroundColor: colors.cyan[900],
+    borderWidth: 1,
+    borderColor: colors.cyan[700],
   },
 
   badgeGreenText: {
-    color: colors.green[400],
+    color: colors.cyan[400],
   },
 
   // Row layouts

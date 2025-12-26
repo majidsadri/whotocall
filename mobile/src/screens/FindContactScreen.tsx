@@ -9,15 +9,12 @@ import {
   SafeAreaView,
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import ReachrLogo from '../components/ReachrLogo';
 
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import ContactCard from '../components/ContactCard';
 import RecordButton from '../components/RecordButton';
-import TagBadge, { getTagVariant } from '../components/TagBadge';
 import { colors } from '../styles/colors';
 import { commonStyles } from '../styles/common';
 import * as api from '../services/api';
@@ -32,11 +29,11 @@ export default function FindContactScreen() {
   const [explanation, setExplanation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [allTags, setAllTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<{tag: string; count: number}[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(true);
+  const [showAllTags, setShowAllTags] = useState(false);
 
-  // Fetch all tags from contacts on mount
   useEffect(() => {
     fetchTags();
   }, []);
@@ -47,15 +44,6 @@ export default function FindContactScreen() {
       const response = await api.getContacts({});
       const contacts = response.contacts || [];
 
-      // Extract unique tags from all contacts
-      const tagSet = new Set<string>();
-      contacts.forEach((contact: Contact) => {
-        if (contact.tags) {
-          contact.tags.forEach((tag: string) => tagSet.add(tag.toLowerCase()));
-        }
-      });
-
-      // Get most common tags (limit to 12)
       const tagCounts: Record<string, number> = {};
       contacts.forEach((contact: Contact) => {
         if (contact.tags) {
@@ -68,8 +56,7 @@ export default function FindContactScreen() {
 
       const sortedTags = Object.entries(tagCounts)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 12)
-        .map(([tag]) => tag);
+        .map(([tag, count]) => ({ tag, count }));
 
       setAllTags(sortedTags);
     } catch (err) {
@@ -79,21 +66,21 @@ export default function FindContactScreen() {
     }
   };
 
-  // Toggle tag selection
   const toggleTag = (tag: string) => {
+    let newTags: string[];
     if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter(t => t !== tag));
+      newTags = selectedTags.filter(t => t !== tag);
     } else {
-      setSelectedTags([...selectedTags, tag]);
+      newTags = [...selectedTags, tag];
     }
-  };
+    setSelectedTags(newTags);
 
-  // Search with selected tags
-  const searchWithTags = () => {
-    if (selectedTags.length > 0) {
-      const tagQuery = selectedTags.join(' ');
+    if (newTags.length > 0) {
+      const tagQuery = newTags.join(' ');
       setQuery(tagQuery);
       handleSearch(tagQuery);
+    } else {
+      clearSearch();
     }
   };
 
@@ -104,7 +91,6 @@ export default function FindContactScreen() {
     error: audioError,
   } = useAudioRecorder();
 
-  // Handle text search
   const handleSearch = async (searchQuery?: string) => {
     const q = searchQuery || query;
     if (!q.trim()) return;
@@ -126,24 +112,19 @@ export default function FindContactScreen() {
     }
   };
 
-  // Handle voice search
   const handleVoicePress = async () => {
     if (isRecording) {
       const path = await stopRecording();
       if (path) {
         setIsTranscribing(true);
         try {
-          // First transcribe
           const transcribeResult = await api.transcribeAudio(path);
           if (transcribeResult.text) {
             setQuery(transcribeResult.text);
-
-            // Then do voice search with agent
             setIsSearching(true);
             const searchResult = await api.voiceSearch(transcribeResult.text, true);
 
             if (searchResult.results) {
-              // Convert to SearchResult format
               const formattedResults: SearchResult[] = searchResult.results.map((contact) => ({
                 contact,
                 score: 0,
@@ -170,18 +151,10 @@ export default function FindContactScreen() {
     }
   };
 
-  // Handle suggestion tap
-  const handleSuggestion = (suggestion: string) => {
-    setQuery(suggestion);
-    handleSearch(suggestion);
-  };
-
-  // Toggle card expansion
   const toggleExpanded = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Render contact item
   const renderContact = ({ item }: { item: SearchResult }) => (
     <ContactCard
       contact={item.contact}
@@ -192,7 +165,6 @@ export default function FindContactScreen() {
     />
   );
 
-  // Clear search and reset
   const clearSearch = () => {
     setQuery('');
     setResults([]);
@@ -201,7 +173,6 @@ export default function FindContactScreen() {
     setExplanation(null);
   };
 
-  // Empty state
   const renderEmpty = () => {
     if (isSearching) return null;
 
@@ -209,11 +180,11 @@ export default function FindContactScreen() {
       return (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIcon}>
-            <Icon name="search" size={36} color={colors.purple[400]} />
+            <Icon name="users" size={32} color={colors.purple[400]} />
           </View>
-          <Text style={styles.emptyTitle}>Search your network</Text>
+          <Text style={styles.emptyTitle}>Find Anyone</Text>
           <Text style={styles.emptySubtitle}>
-            Find contacts by name, company, industry, location, or tags
+            Search by name, company, or use tags below
           </Text>
         </View>
       );
@@ -221,193 +192,169 @@ export default function FindContactScreen() {
 
     return (
       <View style={styles.emptyContainer}>
-        <View style={[styles.emptyIcon, { backgroundColor: colors.orange[100] }]}>
-          <Icon name="user-x" size={36} color={colors.orange[500]} />
+        <View style={[styles.emptyIcon, { backgroundColor: colors.gray[800] }]}>
+          <Icon name="search" size={32} color={colors.gray[500]} />
         </View>
-        <Text style={styles.emptyTitle}>No matches found</Text>
+        <Text style={styles.emptyTitle}>No results</Text>
         <Text style={styles.emptySubtitle}>
-          Try different keywords or browse tags above
+          Try different keywords
         </Text>
-        <TouchableOpacity style={styles.clearSearchButton} onPress={clearSearch}>
-          <Icon name="refresh-cw" size={16} color={colors.purple[600]} />
-          <Text style={styles.clearSearchText}>Clear & Start Over</Text>
-        </TouchableOpacity>
       </View>
     );
   };
+
+  const visibleTags = showAllTags ? allTags : allTags.slice(0, 6);
+  const hasMoreTags = allTags.length > 6;
 
   return (
     <SafeAreaView style={commonStyles.safeArea}>
       <View style={commonStyles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <ReachrLogo size="medium" variant="purple" />
-          <Text style={styles.tagline}>Find your contacts</Text>
+          <Text style={styles.headerTitle}>Search</Text>
         </View>
 
-        {/* Search Box */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Icon name="search" size={20} color={colors.gray[400]} />
+        {/* Search Bar */}
+        <View style={styles.searchSection}>
+          <View style={styles.searchBar}>
+            <Icon name="search" size={20} color={colors.gray[500]} />
             <TextInput
               style={styles.searchInput}
               value={query}
               onChangeText={setQuery}
-              placeholder="Search by name, industry, location, tags..."
-              placeholderTextColor={colors.gray[400]}
+              placeholder="Name, company, tag..."
+              placeholderTextColor={colors.gray[500]}
               returnKeyType="search"
               onSubmitEditing={() => handleSearch()}
             />
             {query.length > 0 && (
-              <TouchableOpacity onPress={() => setQuery('')}>
-                <Icon name="x" size={18} color={colors.gray[400]} />
+              <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                <Icon name="x" size={16} color={colors.gray[400]} />
               </TouchableOpacity>
             )}
-          </View>
-
-          <View style={styles.searchActions}>
+            <View style={styles.searchDivider} />
             <RecordButton
               isRecording={isRecording}
               isProcessing={isTranscribing}
               onPress={handleVoicePress}
-              size={44}
+              size={36}
             />
-            <TouchableOpacity
-              style={[
-                styles.searchButton,
-                !query.trim() && styles.searchButtonDisabled,
-              ]}
-              onPress={() => handleSearch()}
-              disabled={!query.trim() || isSearching}
-            >
-              {isSearching ? (
-                <ActivityIndicator color={colors.white} size="small" />
-              ) : (
-                <Icon name="arrow-right" size={20} color={colors.white} />
-              )}
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Voice status indicator */}
+        {/* Voice Status */}
         {(isRecording || isTranscribing) && (
           <View style={styles.voiceStatus}>
-            <View style={[styles.statusBadge, isRecording && styles.recordingBadge]}>
-              <Text style={styles.statusText}>
-                {isRecording ? 'Recording...' : 'Transcribing...'}
-              </Text>
-            </View>
+            <View style={styles.voiceDot} />
+            <Text style={styles.voiceText}>
+              {isRecording ? 'Listening...' : 'Processing...'}
+            </Text>
           </View>
         )}
 
-        {/* Tags Section */}
+        {/* Tags - Only show when not searched */}
         {!hasSearched && (
-          <View style={styles.tagsSection}>
-            <View style={styles.tagsSectionHeader}>
-              <View style={styles.tagsSectionTitleRow}>
-                <Icon name="tag" size={16} color={colors.purple[500]} />
-                <Text style={styles.tagsSectionTitle}>Browse by Tags</Text>
-              </View>
-              {selectedTags.length > 0 && (
-                <TouchableOpacity style={styles.searchTagsButton} onPress={searchWithTags}>
-                  <Text style={styles.searchTagsText}>Search ({selectedTags.length})</Text>
-                  <Icon name="arrow-right" size={14} color={colors.white} />
-                </TouchableOpacity>
-              )}
-            </View>
-
+          <View style={styles.filtersSection}>
             {isLoadingTags ? (
-              <ActivityIndicator size="small" color={colors.purple[500]} />
-            ) : allTags.length > 0 ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.tagsScrollContent}
-              >
-                {allTags.map((tag, index) => {
-                  const isSelected = selectedTags.includes(tag);
-                  return (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.tagButton,
-                        isSelected && styles.tagButtonSelected,
-                      ]}
-                      onPress={() => toggleTag(tag)}
-                    >
-                      <Text style={[
-                        styles.tagButtonText,
-                        isSelected && styles.tagButtonTextSelected,
-                      ]}>
-                        {tag}
-                      </Text>
-                      {isSelected && (
-                        <Icon name="check" size={12} color={colors.white} />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            ) : (
-              <Text style={styles.noTagsText}>No tags yet. Add contacts to see tags here.</Text>
-            )}
-
-            {/* Quick filters */}
-            <View style={styles.quickFilters}>
-              <Text style={styles.quickFiltersLabel}>Quick Search</Text>
-              <View style={styles.quickFilterButtons}>
-                <TouchableOpacity
-                  style={styles.quickFilterButton}
-                  onPress={() => handleSuggestion('startup')}
-                >
-                  <Icon name="zap" size={14} color={colors.orange[500]} />
-                  <Text style={styles.quickFilterText}>Startups</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.quickFilterButton}
-                  onPress={() => handleSuggestion('technology')}
-                >
-                  <Icon name="cpu" size={14} color={colors.blue[500]} />
-                  <Text style={styles.quickFilterText}>Tech</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.quickFilterButton}
-                  onPress={() => handleSuggestion('real estate')}
-                >
-                  <Icon name="home" size={14} color={colors.green[600]} />
-                  <Text style={styles.quickFilterText}>Real Estate</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.quickFilterButton}
-                  onPress={() => handleSuggestion('investor')}
-                >
-                  <Icon name="trending-up" size={14} color={colors.purple[500]} />
-                  <Text style={styles.quickFilterText}>Investors</Text>
-                </TouchableOpacity>
+              <View style={styles.loadingTags}>
+                <ActivityIndicator size="small" color={colors.purple[500]} />
+                <Text style={styles.loadingText}>Loading tags...</Text>
               </View>
-            </View>
+            ) : allTags.length > 0 ? (
+              <View style={styles.tagsSection}>
+                <View style={styles.tagsSectionHeader}>
+                  <Text style={styles.sectionLabel}>Browse by Tag</Text>
+                  <Text style={styles.tagCount}>{allTags.length} tags</Text>
+                </View>
+                <View style={styles.tagsGrid}>
+                  {visibleTags.map(({ tag, count }) => {
+                    const isSelected = selectedTags.includes(tag);
+                    return (
+                      <TouchableOpacity
+                        key={tag}
+                        style={[
+                          styles.tagChip,
+                          isSelected && styles.tagChipSelected,
+                        ]}
+                        onPress={() => toggleTag(tag)}
+                      >
+                        <Text
+                          style={[
+                            styles.tagText,
+                            isSelected && styles.tagTextSelected,
+                          ]}
+                        >
+                          {tag}
+                        </Text>
+                        <View style={[
+                          styles.tagCountBadge,
+                          isSelected && styles.tagCountBadgeSelected,
+                        ]}>
+                          <Text style={[
+                            styles.tagCountText,
+                            isSelected && styles.tagCountTextSelected,
+                          ]}>
+                            {count}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {hasMoreTags && (
+                  <TouchableOpacity
+                    style={styles.showMoreButton}
+                    onPress={() => setShowAllTags(!showAllTags)}
+                  >
+                    <Text style={styles.showMoreText}>
+                      {showAllTags ? 'Show less' : `Show all ${allTags.length} tags`}
+                    </Text>
+                    <Icon
+                      name={showAllTags ? 'chevron-up' : 'chevron-down'}
+                      size={16}
+                      color={colors.purple[400]}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <View style={styles.noTagsContainer}>
+                <Icon name="tag" size={24} color={colors.gray[600]} />
+                <Text style={styles.noTagsText}>No tags yet</Text>
+                <Text style={styles.noTagsSubtext}>Add tags to contacts to see them here</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Results Header */}
+        {hasSearched && (
+          <View style={styles.resultsHeader}>
+            <TouchableOpacity onPress={clearSearch} style={styles.backButton}>
+              <Icon name="arrow-left" size={18} color={colors.gray[400]} />
+            </TouchableOpacity>
+            <Text style={styles.resultsTitle}>
+              {isSearching ? 'Searching...' : `${results.length} result${results.length !== 1 ? 's' : ''}`}
+            </Text>
           </View>
         )}
 
         {/* AI Explanation */}
         {explanation && (
-          <View style={styles.explanationCard}>
-            <View style={styles.explanationHeader}>
-              <Icon name="cpu" size={14} color={colors.purple[500]} />
-              <Text style={styles.explanationTitle}>AI Analysis</Text>
-            </View>
-            <Text style={styles.explanationText}>{explanation}</Text>
+          <View style={styles.aiCard}>
+            <Icon name="cpu" size={14} color={colors.purple[400]} />
+            <Text style={styles.aiText}>{explanation}</Text>
           </View>
         )}
 
         {/* Error */}
         {(error || audioError) && (
-          <View style={[commonStyles.errorContainer, { marginHorizontal: 16 }]}>
-            <Text style={commonStyles.errorText}>{error || audioError}</Text>
+          <View style={styles.errorCard}>
+            <Text style={styles.errorText}>{error || audioError}</Text>
           </View>
         )}
 
-        {/* Results */}
+        {/* Results List */}
         <FlatList
           data={results}
           keyExtractor={(item) => item.contact.id}
@@ -419,28 +366,10 @@ export default function FindContactScreen() {
             <RefreshControl
               refreshing={isSearching}
               onRefresh={() => handleSearch()}
-              colors={[colors.green[500]]}
-              tintColor={colors.green[500]}
+              tintColor={colors.purple[500]}
             />
           }
         />
-
-        {/* Results footer */}
-        {hasSearched && (
-          <View style={styles.resultsFooter}>
-            <TouchableOpacity style={styles.backToTagsButton} onPress={clearSearch}>
-              <Icon name="arrow-left" size={16} color={colors.purple[600]} />
-              <Text style={styles.backToTagsText}>Browse Tags</Text>
-            </TouchableOpacity>
-            {results.length > 0 && (
-              <View style={styles.resultsCountBadge}>
-                <Text style={styles.resultsCountText}>
-                  {results.length} found
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
       </View>
     </SafeAreaView>
   );
@@ -449,331 +378,244 @@ export default function FindContactScreen() {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
-  tagline: {
-    fontSize: 16,
-    color: colors.cyan[400],
-    marginTop: 12,
-    letterSpacing: 0.5,
-    fontWeight: '500',
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.text,
+    letterSpacing: -0.5,
   },
-  searchContainer: {
+  searchSection: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
-    flexDirection: 'row',
-    gap: 12,
-    backgroundColor: colors.surface,
-    marginHorizontal: 16,
-    marginTop: -20,
-    borderRadius: 20,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: colors.border,
+    paddingVertical: 12,
   },
-  searchInputContainer: {
-    flex: 1,
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: 16,
+    backgroundColor: colors.gray[800],
+    borderRadius: 14,
     paddingHorizontal: 16,
-    gap: 10,
-    borderWidth: 2,
-    borderColor: colors.border,
+    height: 52,
   },
   searchInput: {
     flex: 1,
-    height: 50,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.text,
+    marginLeft: 12,
   },
-  searchActions: {
-    flexDirection: 'row',
-    gap: 10,
+  clearButton: {
+    padding: 4,
   },
-  searchButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  searchButtonDisabled: {
+  searchDivider: {
+    width: 1,
+    height: 24,
     backgroundColor: colors.gray[700],
-    shadowOpacity: 0,
+    marginHorizontal: 12,
   },
   voiceStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
-  statusBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.gray[800],
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+  voiceDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.red[500],
+    marginRight: 8,
   },
-  recordingBadge: {
-    backgroundColor: colors.red[900],
-  },
-  statusText: {
+  voiceText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray[600],
+    color: colors.gray[400],
+    fontWeight: '500',
   },
-  // Tags Section
+  filtersSection: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  loadingTags: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: colors.gray[500],
+    marginLeft: 10,
+  },
   tagsSection: {
-    paddingTop: 24,
-    paddingBottom: 16,
+    marginBottom: 16,
   },
   tagsSectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  tagsSectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  tagsSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+  sectionLabel: {
+    fontSize: 15,
+    fontWeight: '600',
     color: colors.text,
   },
-  searchTagsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  searchTagsText: {
+  tagCount: {
     fontSize: 13,
-    fontWeight: '600',
-    color: colors.white,
+    color: colors.gray[500],
   },
-  tagsScrollContent: {
-    paddingHorizontal: 20,
-    gap: 10,
+  tagsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
   },
-  tagButton: {
+  tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
+    paddingLeft: 14,
+    paddingRight: 10,
     paddingVertical: 10,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: colors.border,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 10,
+    backgroundColor: colors.gray[800],
+    margin: 4,
+    borderWidth: 1,
+    borderColor: colors.gray[700],
   },
-  tagButtonSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  tagChipSelected: {
+    backgroundColor: colors.purple[600],
+    borderColor: colors.purple[500],
   },
-  tagButtonText: {
+  tagText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.purple[400],
+    fontWeight: '500',
+    color: colors.gray[300],
     textTransform: 'capitalize',
   },
-  tagButtonTextSelected: {
+  tagTextSelected: {
     color: colors.white,
   },
-  noTagsText: {
-    fontSize: 14,
-    color: colors.gray[400],
-    textAlign: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+  tagCountBadge: {
+    marginLeft: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: colors.gray[700],
   },
-  // Quick Filters
-  quickFilters: {
-    marginTop: 24,
-    paddingHorizontal: 20,
+  tagCountBadgeSelected: {
+    backgroundColor: colors.purple[500],
   },
-  quickFiltersLabel: {
+  tagCountText: {
     fontSize: 11,
     fontWeight: '600',
     color: colors.gray[400],
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
   },
-  quickFilterButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+  tagCountTextSelected: {
+    color: colors.white,
   },
-  quickFilterButton: {
+  showMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    justifyContent: 'center',
+    paddingVertical: 14,
+    marginTop: 8,
   },
-  quickFilterText: {
+  showMoreText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.purple[400],
+    marginRight: 6,
   },
-  explanationCard: {
-    marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: colors.green[900],
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.green[700],
-  },
-  explanationHeader: {
-    flexDirection: 'row',
+  noTagsContainer: {
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
+    paddingVertical: 32,
   },
-  explanationTitle: {
+  noTagsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.gray[400],
+    marginTop: 12,
+  },
+  noTagsSubtext: {
     fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
+    color: colors.gray[600],
+    marginTop: 4,
   },
-  explanationText: {
+  resultsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[800],
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+    marginLeft: -8,
+  },
+  resultsTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.gray[400],
+  },
+  aiCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginHorizontal: 20,
+    marginVertical: 12,
+    padding: 14,
+    backgroundColor: colors.purple[900] + '40',
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.purple[500],
+  },
+  aiText: {
+    flex: 1,
     fontSize: 14,
-    color: colors.green[300],
-    lineHeight: 22,
+    color: colors.purple[300],
+    marginLeft: 10,
+    lineHeight: 20,
+  },
+  errorCard: {
+    marginHorizontal: 20,
+    marginVertical: 8,
+    padding: 12,
+    backgroundColor: colors.red[900] + '40',
+    borderRadius: 10,
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.red[400],
   },
   listContent: {
     padding: 20,
-    paddingBottom: 120,
+    paddingBottom: 100,
     flexGrow: 1,
   },
   emptyContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
   },
   emptyIcon: {
-    width: 88,
-    height: 88,
-    borderRadius: 24,
-    backgroundColor: colors.purple[900],
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: colors.purple[900] + '60',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
-    letterSpacing: -0.3,
+    marginBottom: 6,
   },
   emptySubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: colors.gray[500],
     textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 22,
-    paddingHorizontal: 20,
-  },
-  clearSearchButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: colors.surface,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: colors.border,
-  },
-  clearSearchText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.purple[400],
-  },
-  resultsFooter: {
-    position: 'absolute',
-    bottom: 100,
-    left: 20,
-    right: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  backToTagsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  backToTagsText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.purple[400],
-  },
-  resultsCountBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  resultsCountText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.white,
   },
 });
