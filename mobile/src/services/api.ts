@@ -1,5 +1,8 @@
-import { Contact, ExtractedTags, SearchResult } from '../types';
+import { Contact, ExtractedTags, SearchResult, BusinessCard, BusinessCardInput } from '../types';
 import { supabase } from '../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const BUSINESS_CARD_STORAGE_KEY = '@business_card';
 
 // Configure base URL - Always use EC2 so Simulator and iPhone share the same database
 const BASE_URL = 'http://18.215.164.114:8080';
@@ -301,4 +304,133 @@ export async function webSearch(params: {
     method: 'POST',
     body: JSON.stringify(params),
   });
+}
+
+// Business Card APIs
+export async function getBusinessCard(): Promise<{ card: BusinessCard | null }> {
+  try {
+    // Try API first
+    return await apiRequest('/api/business-card');
+  } catch (error) {
+    // Fallback to local storage
+    console.log('API unavailable, using local storage for business card');
+    const stored = await AsyncStorage.getItem(BUSINESS_CARD_STORAGE_KEY);
+    if (stored) {
+      return { card: JSON.parse(stored) };
+    }
+    return { card: null };
+  }
+}
+
+export async function saveBusinessCard(card: BusinessCardInput): Promise<{
+  success: boolean;
+  card: BusinessCard;
+}> {
+  try {
+    // Try API first
+    return await apiRequest('/api/business-card', {
+      method: 'POST',
+      body: JSON.stringify(card),
+    });
+  } catch (error) {
+    // Fallback to local storage
+    console.log('API unavailable, saving business card locally');
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const savedCard: BusinessCard = {
+      id: 'local-' + Date.now(),
+      user_id: user?.id || 'anonymous',
+      full_name: card.full_name,
+      email: card.email,
+      phone: card.phone,
+      title: card.title,
+      company: card.company,
+      website: card.website,
+      linkedin_url: card.linkedin_url,
+      avatar_url: card.avatar_url,
+      template_id: card.template_id,
+      accent_color: card.accent_color,
+      share_slug: user?.id || card.full_name.toLowerCase().replace(/\s+/g, '-'),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    await AsyncStorage.setItem(BUSINESS_CARD_STORAGE_KEY, JSON.stringify(savedCard));
+    return { success: true, card: savedCard };
+  }
+}
+
+export async function uploadCardAvatar(imageUri: string): Promise<{
+  success: boolean;
+  avatar_url: string;
+}> {
+  try {
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() || 'avatar.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+    formData.append('image', {
+      uri: imageUri,
+      name: filename,
+      type,
+    } as any);
+
+    return await apiFormRequest('/api/business-card/avatar', formData);
+  } catch (error) {
+    // Fallback: use local URI (works for preview, but not for sharing)
+    console.log('API unavailable, using local image URI');
+    return { success: true, avatar_url: imageUri };
+  }
+}
+
+export async function getVCard(): Promise<string> {
+  try {
+    const url = `${BASE_URL}/api/business-card/vcard`;
+    const authHeaders = await getAuthHeaders();
+
+    const response = await fetch(url, {
+      headers: {
+        ...authHeaders,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate vCard');
+    }
+
+    return response.text();
+  } catch (error) {
+    // Generate vCard locally from stored card
+    const stored = await AsyncStorage.getItem(BUSINESS_CARD_STORAGE_KEY);
+    if (stored) {
+      const card = JSON.parse(stored) as BusinessCard;
+      return generateLocalVCard(card);
+    }
+    throw new Error('No card data available');
+  }
+}
+
+// Generate vCard locally
+function generateLocalVCard(card: BusinessCard): string {
+  const lines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `FN:${card.full_name}`,
+    `N:${card.full_name.split(' ').reverse().join(';')};;;`,
+  ];
+
+  if (card.email) lines.push(`EMAIL:${card.email}`);
+  if (card.phone) lines.push(`TEL:${card.phone}`);
+  if (card.title) lines.push(`TITLE:${card.title}`);
+  if (card.company) lines.push(`ORG:${card.company}`);
+  if (card.website) lines.push(`URL:${card.website}`);
+  if (card.linkedin_url) lines.push(`X-SOCIALPROFILE;TYPE=linkedin:${card.linkedin_url}`);
+
+  lines.push('END:VCARD');
+  return lines.join('\n');
+}
+
+export function getShareUrl(shareSlug: string): string {
+  return `${BASE_URL}/card/${shareSlug}`;
 }

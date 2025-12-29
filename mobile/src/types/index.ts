@@ -72,3 +72,6 @@ export interface SearchResult {
   score: number;
   matchReason: string;
 }
+
+// Business Card exports
+export * from './businessCard';

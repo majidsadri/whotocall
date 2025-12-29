@@ -1,13 +1,250 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Animated, Easing } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../styles/colors';
-import ReachrLogo from './ReachrLogo';
 
 interface AppHeaderProps {
   onLoginPress: () => void;
   onProfilePress: () => void;
+}
+
+function AnimatedLogo() {
+  // Card animations
+  const cardOpacity = useRef(new Animated.Value(1)).current;
+  const cardRotateY = useRef(new Animated.Value(0)).current;
+  const cardTranslateX = useRef(new Animated.Value(-8)).current;
+  const cardScale = useRef(new Animated.Value(1)).current;
+
+  // Phone animations
+  const phoneOpacity = useRef(new Animated.Value(0.2)).current;
+  const phoneScale = useRef(new Animated.Value(0.9)).current;
+  const phoneGlow = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        // Phase 1: Card floats gently
+        Animated.parallel([
+          Animated.timing(cardTranslateX, {
+            toValue: -6,
+            duration: 800,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardScale, {
+            toValue: 1.05,
+            duration: 800,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ]),
+
+        // Phase 2: Card flies toward phone with flip
+        Animated.parallel([
+          Animated.timing(cardRotateY, {
+            toValue: 1,
+            duration: 700,
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardTranslateX, {
+            toValue: 12,
+            duration: 700,
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardScale, {
+            toValue: 0.3,
+            duration: 700,
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardOpacity, {
+            toValue: 0,
+            duration: 500,
+            delay: 200,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          // Phone wakes up
+          Animated.timing(phoneOpacity, {
+            toValue: 1,
+            duration: 400,
+            delay: 300,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(phoneScale, {
+            toValue: 1,
+            duration: 400,
+            delay: 300,
+            easing: Easing.out(Easing.back(2)),
+            useNativeDriver: true,
+          }),
+        ]),
+
+        // Phase 3: Phone pulses with glow
+        Animated.sequence([
+          Animated.parallel([
+            Animated.timing(phoneGlow, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(phoneScale, {
+              toValue: 1.15,
+              duration: 200,
+              easing: Easing.out(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(phoneGlow, {
+              toValue: 0.3,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(phoneScale, {
+              toValue: 1,
+              duration: 300,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ]),
+          // Second smaller pulse
+          Animated.parallel([
+            Animated.timing(phoneGlow, {
+              toValue: 0.7,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(phoneScale, {
+              toValue: 1.08,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(phoneGlow, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(phoneScale, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]),
+        ]),
+
+        // Hold
+        Animated.delay(1000),
+
+        // Phase 4: Reset smoothly
+        Animated.parallel([
+          Animated.timing(phoneOpacity, {
+            toValue: 0.2,
+            duration: 400,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(phoneScale, {
+            toValue: 0.9,
+            duration: 400,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardOpacity, {
+            toValue: 1,
+            duration: 500,
+            delay: 100,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardRotateY, {
+            toValue: 0,
+            duration: 500,
+            delay: 100,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardTranslateX, {
+            toValue: -8,
+            duration: 500,
+            delay: 100,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardScale, {
+            toValue: 1,
+            duration: 500,
+            delay: 100,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+
+        // Pause before loop
+        Animated.delay(800),
+      ])
+    );
+
+    animation.start();
+    return () => animation.stop();
+  }, []);
+
+  const rotateInterpolate = cardRotateY.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  return (
+    <View style={styles.logoContainer}>
+      {/* Phone (background) */}
+      <Animated.View
+        style={[
+          styles.phoneWrapper,
+          {
+            opacity: phoneOpacity,
+            transform: [{ scale: phoneScale }],
+          },
+        ]}
+      >
+        <Animated.View
+          style={[
+            styles.phoneGlow,
+            { opacity: phoneGlow },
+          ]}
+        />
+        <Icon name="smartphone" size={22} color="#E5E5E5" />
+      </Animated.View>
+
+      {/* Business Card (foreground) */}
+      <Animated.View
+        style={[
+          styles.cardWrapper,
+          {
+            opacity: cardOpacity,
+            transform: [
+              { translateX: cardTranslateX },
+              { rotateY: rotateInterpolate },
+              { scale: cardScale },
+            ],
+          },
+        ]}
+      >
+        <View style={styles.cardIcon}>
+          <View style={styles.cardAvatar} />
+          <View style={styles.cardLines}>
+            <View style={styles.cardLine} />
+            <View style={styles.cardLineShort} />
+          </View>
+        </View>
+      </Animated.View>
+    </View>
+  );
 }
 
 export default function AppHeader({ onLoginPress, onProfilePress }: AppHeaderProps) {
@@ -19,22 +256,17 @@ export default function AppHeader({ onLoginPress, onProfilePress }: AppHeaderPro
 
   return (
     <View style={styles.header}>
-      {/* Left: Logo + Brand */}
-      <View style={styles.brandRow}>
-        <ReachrLogo size="small" showText={false} />
-        <View style={styles.brandTextContainer}>
-          <Text style={styles.brandLetter1}>r</Text>
-          <Text style={styles.brandLetter2}>e</Text>
-          <Text style={styles.brandLetter3}>a</Text>
-          <Text style={styles.brandLetter4}>c</Text>
-          <Text style={styles.brandLetter5}>h</Text>
-          <Text style={styles.brandLetter6}>r</Text>
+      {/* Left: Animated Logo + Brand Text */}
+      <View style={styles.brandContainer}>
+        <View style={styles.logoBox}>
+          <AnimatedLogo />
         </View>
+        <Text style={styles.brandText}>reachr</Text>
       </View>
 
       {/* Right: Profile/Login */}
       <TouchableOpacity
-        style={styles.authButton}
+        style={styles.profileButton}
         onPress={user ? onProfilePress : onLoginPress}
         disabled={isLoading}
         activeOpacity={0.7}
@@ -44,12 +276,12 @@ export default function AppHeader({ onLoginPress, onProfilePress }: AppHeaderPro
             <Image source={{ uri: getAvatarUrl() }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Icon name="user" size={18} color={colors.white} />
+              <Icon name="user" size={16} color="#E5E5E5" />
             </View>
           )
         ) : (
-          <View style={styles.loginButton}>
-            <Icon name="log-in" size={20} color={colors.cyan[400]} />
+          <View style={styles.loginIcon}>
+            <Icon name="log-in" size={18} color="#9CA3AF" />
           </View>
         )}
       </TouchableOpacity>
@@ -63,104 +295,122 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 8,
     paddingBottom: 8,
     backgroundColor: colors.background,
   },
-  brandRow: {
+  brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
-  brandTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  brandLetter1: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#C084FC',
-    textShadowColor: '#A855F7',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-    letterSpacing: 1.5,
-  },
-  brandLetter2: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#A5F3FC',
-    textShadowColor: '#67E8F9',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-    letterSpacing: 1.5,
-  },
-  brandLetter3: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#B5A3F0',
-    textShadowColor: '#A78BFA',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-    letterSpacing: 1.5,
-  },
-  brandLetter4: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#93C5FD',
-    textShadowColor: '#60A5FA',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-    letterSpacing: 1.5,
-  },
-  brandLetter5: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#67E8F9',
-    textShadowColor: '#22D3EE',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-    letterSpacing: 1.5,
-  },
-  brandLetter6: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#22D3EE',
-    textShadowColor: '#06B6D4',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-    letterSpacing: 1.5,
-  },
-  authButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: colors.purple[500],
-  },
-  avatarPlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.purple[500],
-  },
-  loginButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
+  logoBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#1F1F23',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#2A2A2E',
+    overflow: 'hidden',
+  },
+  logoContainer: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phoneWrapper: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phoneGlow: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#60A5FA',
+    opacity: 0.4,
+  },
+  cardWrapper: {
+    position: 'absolute',
+  },
+  cardIcon: {
+    width: 22,
+    height: 16,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 3,
+    gap: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  cardAvatar: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#9CA3AF',
+  },
+  cardLines: {
+    flex: 1,
+    gap: 2,
+  },
+  cardLine: {
+    width: '100%',
+    height: 2,
+    backgroundColor: '#9CA3AF',
+    borderRadius: 1,
+  },
+  cardLineShort: {
+    width: '60%',
+    height: 2,
+    backgroundColor: '#D1D5DB',
+    borderRadius: 1,
+  },
+  brandText: {
+    fontSize: 22,
+    fontWeight: '300',
+    color: '#E5E5E5',
+    letterSpacing: 3,
+  },
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2A2A2E',
+  },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#1F1F23',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#2A2A2E',
+  },
+  loginIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#1F1F23',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#2A2A2E',
   },
 });

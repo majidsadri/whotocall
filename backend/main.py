@@ -123,48 +123,199 @@ class UserPreferences(BaseModel):
     suggested_tags: Optional[List[str]] = []
 
 
+class BusinessCard(BaseModel):
+    id: Optional[str] = None
+    user_id: Optional[str] = None
+    full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    title: Optional[str] = None
+    company: Optional[str] = None
+    website: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    avatar_url: Optional[str] = None
+    template_id: Optional[str] = "classic"
+    accent_color: Optional[str] = "#7C3AED"
+    share_slug: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class BusinessCardInput(BaseModel):
+    full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    title: Optional[str] = None
+    company: Optional[str] = None
+    website: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    avatar_url: Optional[str] = None
+    template_id: Optional[str] = "classic"
+    accent_color: Optional[str] = "#7C3AED"
+
+
 # Industry-specific default tags
 INDUSTRY_DEFAULT_TAGS = {
-    "real_estate": [
-        "buyer", "seller", "investor", "broker", "agent", "property manager",
-        "landlord", "tenant", "developer", "appraiser", "mortgage", "lender",
-        "commercial", "residential", "industrial", "retail", "land", "flip",
-        "rental", "wholesale", "REIT", "hard money", "title company"
+    "architecture": [
+        "architect", "designer", "principal", "project manager", "urban planner",
+        "landscape", "interior design", "sustainable", "LEED", "BIM", "CAD",
+        "residential", "commercial", "mixed-use", "historic preservation", "permit"
     ],
-    "technology": [
-        "developer", "engineer", "founder", "CEO", "CTO", "product manager",
-        "designer", "startup", "investor", "VC", "SaaS", "AI", "machine learning",
-        "mobile", "web", "cloud", "DevOps", "data scientist", "advisor"
+    "automotive": [
+        "dealer", "sales", "service manager", "mechanic", "parts", "fleet",
+        "manufacturer", "OEM", "aftermarket", "electric vehicle", "EV", "hybrid",
+        "lease", "finance", "warranty", "collision", "body shop"
     ],
-    "finance": [
-        "banker", "investor", "analyst", "trader", "portfolio manager", "CFO",
-        "accountant", "wealth manager", "private equity", "hedge fund", "VC",
-        "angel investor", "fintech", "crypto", "insurance", "lending"
+    "civil_engineering": [
+        "engineer", "PE", "project manager", "surveyor", "inspector", "contractor",
+        "structural", "geotechnical", "environmental", "transportation", "water",
+        "wastewater", "stormwater", "DOT", "municipal", "infrastructure"
     ],
-    "healthcare": [
-        "doctor", "physician", "nurse", "surgeon", "specialist", "hospital",
-        "clinic", "pharma", "biotech", "medical device", "health tech",
-        "administrator", "researcher", "patient advocate", "insurance"
-    ],
-    "marketing": [
-        "marketer", "brand manager", "CMO", "agency", "creative director",
-        "content creator", "SEO", "social media", "PR", "influencer",
-        "copywriter", "growth hacker", "digital marketing", "analytics"
-    ],
-    "legal": [
-        "attorney", "lawyer", "partner", "associate", "paralegal", "judge",
-        "corporate law", "litigation", "IP", "contract", "M&A", "compliance",
-        "in-house counsel", "legal tech"
+    "construction": [
+        "contractor", "GC", "subcontractor", "project manager", "superintendent",
+        "estimator", "foreman", "developer", "builder", "architect", "engineer",
+        "residential", "commercial", "industrial", "renovation", "OSHA"
     ],
     "consulting": [
         "consultant", "partner", "analyst", "advisor", "strategy", "management",
         "operations", "IT consulting", "HR consulting", "change management",
         "business development", "client"
     ],
+    "education": [
+        "teacher", "professor", "principal", "dean", "administrator", "coach",
+        "tutor", "curriculum", "K-12", "higher ed", "university", "college",
+        "online learning", "EdTech", "training", "student"
+    ],
+    "energy": [
+        "engineer", "project manager", "analyst", "utility", "solar", "wind",
+        "renewable", "oil", "gas", "nuclear", "grid", "power plant", "sustainability",
+        "energy efficiency", "EV charging", "battery storage"
+    ],
+    "entertainment": [
+        "producer", "director", "actor", "writer", "agent", "manager", "talent",
+        "studio", "network", "streaming", "music", "film", "TV", "gaming",
+        "live events", "venue", "promoter"
+    ],
+    "finance": [
+        "banker", "investor", "analyst", "trader", "portfolio manager", "CFO",
+        "accountant", "wealth manager", "private equity", "hedge fund", "VC",
+        "angel investor", "fintech", "crypto", "insurance", "lending"
+    ],
+    "food_beverage": [
+        "chef", "owner", "manager", "sommelier", "bartender", "caterer",
+        "food service", "distributor", "supplier", "franchise", "fast casual",
+        "fine dining", "brewery", "winery", "distillery", "food truck"
+    ],
+    "government": [
+        "official", "administrator", "analyst", "director", "commissioner",
+        "council member", "mayor", "senator", "representative", "staffer",
+        "policy", "public affairs", "regulatory", "compliance", "grants"
+    ],
+    "healthcare": [
+        "doctor", "physician", "nurse", "surgeon", "specialist", "hospital",
+        "clinic", "pharma", "biotech", "medical device", "health tech",
+        "administrator", "researcher", "patient advocate", "insurance"
+    ],
+    "hospitality": [
+        "GM", "hotel manager", "front desk", "concierge", "housekeeping",
+        "F&B director", "event planner", "revenue manager", "franchise",
+        "boutique", "resort", "vacation rental", "Airbnb", "timeshare"
+    ],
+    "insurance": [
+        "agent", "broker", "underwriter", "adjuster", "actuary", "claims",
+        "risk manager", "commercial", "personal lines", "life", "health",
+        "property", "casualty", "reinsurance", "InsurTech"
+    ],
+    "legal": [
+        "attorney", "lawyer", "partner", "associate", "paralegal", "judge",
+        "corporate law", "litigation", "IP", "contract", "M&A", "compliance",
+        "in-house counsel", "legal tech"
+    ],
+    "logistics": [
+        "logistics manager", "supply chain", "warehouse", "distribution",
+        "freight", "shipping", "carrier", "3PL", "fulfillment", "inventory",
+        "procurement", "sourcing", "import", "export", "customs"
+    ],
+    "manufacturing": [
+        "plant manager", "operations", "quality", "engineer", "production",
+        "lean", "six sigma", "supply chain", "procurement", "maintenance",
+        "automation", "robotics", "CNC", "assembly", "OEM"
+    ],
+    "marketing": [
+        "marketer", "brand manager", "CMO", "agency", "creative director",
+        "content creator", "SEO", "social media", "PR", "influencer",
+        "copywriter", "growth hacker", "digital marketing", "analytics"
+    ],
+    "media": [
+        "journalist", "editor", "reporter", "producer", "publisher", "writer",
+        "content", "digital media", "broadcast", "print", "podcast", "blogger",
+        "social media", "communications", "PR"
+    ],
+    "medicine": [
+        "physician", "MD", "DO", "specialist", "surgeon", "primary care",
+        "pediatrician", "cardiologist", "oncologist", "orthopedic", "neurologist",
+        "psychiatrist", "dermatologist", "radiologist", "anesthesiologist", "resident"
+    ],
+    "military": [
+        "veteran", "officer", "enlisted", "contractor", "defense", "DOD",
+        "Army", "Navy", "Air Force", "Marines", "Coast Guard", "National Guard",
+        "security clearance", "aerospace", "intelligence"
+    ],
+    "nonprofit": [
+        "executive director", "development", "fundraiser", "program manager",
+        "volunteer", "board member", "grant writer", "donor", "foundation",
+        "charity", "NGO", "advocacy", "community", "social impact"
+    ],
+    "pharmaceutical": [
+        "pharma rep", "medical affairs", "clinical", "R&D", "regulatory",
+        "FDA", "biotech", "drug development", "clinical trials", "medical science",
+        "commercialization", "market access", "pricing", "generics"
+    ],
+    "real_estate": [
+        "buyer", "seller", "investor", "broker", "agent", "property manager",
+        "landlord", "tenant", "developer", "appraiser", "mortgage", "lender",
+        "commercial", "residential", "industrial", "retail", "land", "flip",
+        "rental", "wholesale", "REIT", "hard money", "title company"
+    ],
+    "restaurant": [
+        "owner", "chef", "manager", "server", "bartender", "host", "sommelier",
+        "franchise", "fast food", "casual dining", "fine dining", "catering",
+        "food truck", "delivery", "ghost kitchen", "bar"
+    ],
+    "retail": [
+        "store manager", "buyer", "merchandiser", "district manager", "regional",
+        "e-commerce", "omnichannel", "inventory", "loss prevention", "visual",
+        "customer service", "franchise", "DTC", "wholesale"
+    ],
     "sales": [
         "sales rep", "account executive", "SDR", "BDR", "sales manager",
         "VP sales", "enterprise", "SMB", "inside sales", "field sales",
         "solution engineer", "sales ops", "quota", "pipeline"
+    ],
+    "sports": [
+        "coach", "trainer", "athlete", "agent", "team", "league", "franchise",
+        "fitness", "gym owner", "personal trainer", "physical therapist",
+        "sports medicine", "equipment", "apparel", "sponsorship"
+    ],
+    "technology": [
+        "developer", "engineer", "founder", "CEO", "CTO", "product manager",
+        "designer", "startup", "investor", "VC", "SaaS", "AI", "machine learning",
+        "mobile", "web", "cloud", "DevOps", "data scientist", "advisor"
+    ],
+    "telecom": [
+        "engineer", "sales", "network", "wireless", "fiber", "5G", "carrier",
+        "ISP", "VoIP", "unified communications", "infrastructure", "tower",
+        "spectrum", "regulatory", "enterprise"
+    ],
+    "transportation": [
+        "driver", "dispatcher", "fleet manager", "logistics", "trucking",
+        "shipping", "freight", "rail", "aviation", "maritime", "public transit",
+        "ride share", "delivery", "last mile", "DOT"
+    ],
+    "travel": [
+        "travel agent", "tour operator", "hotel", "airline", "cruise",
+        "destination", "corporate travel", "leisure", "adventure", "luxury",
+        "booking", "OTA", "DMC", "MICE", "tourism board"
     ],
     "general": [
         "networking", "conference", "referral", "LinkedIn", "introduction",
@@ -221,6 +372,89 @@ def save_user_preferences(user_id: str, preferences: dict):
     os.makedirs(os.path.dirname(prefs_file), exist_ok=True)
     with open(prefs_file, "w") as f:
         json.dump(preferences, f, indent=2)
+
+
+def get_business_card_file(user_id: str) -> str:
+    """Get the business card file path for a specific user"""
+    user_dir = os.path.join(DATA_DIR, "users", user_id)
+    os.makedirs(user_dir, exist_ok=True)
+    return os.path.join(user_dir, "business_card.json")
+
+
+def load_business_card(user_id: str) -> Optional[dict]:
+    """Load business card from JSON file for a specific user"""
+    card_file = get_business_card_file(user_id)
+    try:
+        if os.path.exists(card_file):
+            with open(card_file, "r") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error loading business card for user {user_id}: {e}")
+    return None
+
+
+def save_business_card(user_id: str, card: dict):
+    """Save business card to JSON file for a specific user"""
+    card_file = get_business_card_file(user_id)
+    os.makedirs(os.path.dirname(card_file), exist_ok=True)
+    with open(card_file, "w") as f:
+        json.dump(card, f, indent=2)
+
+
+def generate_share_slug(name: str) -> str:
+    """Generate a unique share slug from the user's name"""
+    import re
+    import random
+    import string
+
+    # Clean the name
+    slug = name.lower().strip()
+    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+    slug = re.sub(r'[\s_-]+', '-', slug)
+    slug = slug[:30]  # Limit length
+
+    # Add random suffix
+    suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    return f"{slug}-{suffix}"
+
+
+def generate_vcard(card: dict) -> str:
+    """Generate vCard 3.0 format from business card data"""
+    lines = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+    ]
+
+    # Name
+    if card.get("full_name"):
+        parts = card["full_name"].split(" ", 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ""
+        lines.append(f"FN:{card['full_name']}")
+        lines.append(f"N:{last_name};{first_name};;;")
+
+    # Organization and title
+    if card.get("company"):
+        lines.append(f"ORG:{card['company']}")
+    if card.get("title"):
+        lines.append(f"TITLE:{card['title']}")
+
+    # Contact info
+    if card.get("phone"):
+        lines.append(f"TEL;TYPE=CELL:{card['phone']}")
+    if card.get("email"):
+        lines.append(f"EMAIL:{card['email']}")
+    if card.get("website"):
+        lines.append(f"URL:{card['website']}")
+    if card.get("linkedin_url"):
+        lines.append(f"URL;TYPE=LinkedIn:{card['linkedin_url']}")
+
+    # Photo
+    if card.get("avatar_url"):
+        lines.append(f"PHOTO;VALUE=URI:{card['avatar_url']}")
+
+    lines.append("END:VCARD")
+    return "\r\n".join(lines)
 
 
 def extract_text_from_image(image_bytes: bytes) -> str:
@@ -747,15 +981,39 @@ async def get_all_tags(user_id: Optional[str] = Depends(get_user_id_from_token))
 async def get_industries():
     """Get list of available industries for user selection"""
     industries = [
-        {"id": "real_estate", "name": "Real Estate", "icon": "home"},
-        {"id": "technology", "name": "Technology", "icon": "cpu"},
-        {"id": "finance", "name": "Finance", "icon": "dollar-sign"},
-        {"id": "healthcare", "name": "Healthcare", "icon": "heart"},
-        {"id": "marketing", "name": "Marketing", "icon": "trending-up"},
-        {"id": "legal", "name": "Legal", "icon": "briefcase"},
+        {"id": "architecture", "name": "Architecture", "icon": "layout"},
+        {"id": "automotive", "name": "Automotive", "icon": "truck"},
+        {"id": "civil_engineering", "name": "Civil Engineering", "icon": "tool"},
+        {"id": "construction", "name": "Construction", "icon": "hard-hat"},
         {"id": "consulting", "name": "Consulting", "icon": "users"},
+        {"id": "education", "name": "Education", "icon": "book"},
+        {"id": "energy", "name": "Energy & Utilities", "icon": "zap"},
+        {"id": "entertainment", "name": "Entertainment", "icon": "film"},
+        {"id": "finance", "name": "Finance & Banking", "icon": "dollar-sign"},
+        {"id": "food_beverage", "name": "Food & Beverage", "icon": "coffee"},
+        {"id": "government", "name": "Government", "icon": "flag"},
+        {"id": "healthcare", "name": "Healthcare", "icon": "heart"},
+        {"id": "hospitality", "name": "Hospitality & Hotels", "icon": "home"},
+        {"id": "insurance", "name": "Insurance", "icon": "shield"},
+        {"id": "legal", "name": "Legal", "icon": "briefcase"},
+        {"id": "logistics", "name": "Logistics & Supply Chain", "icon": "package"},
+        {"id": "manufacturing", "name": "Manufacturing", "icon": "settings"},
+        {"id": "marketing", "name": "Marketing & Advertising", "icon": "trending-up"},
+        {"id": "media", "name": "Media & Publishing", "icon": "tv"},
+        {"id": "medicine", "name": "Medicine & Physician", "icon": "activity"},
+        {"id": "military", "name": "Military & Defense", "icon": "shield"},
+        {"id": "nonprofit", "name": "Nonprofit", "icon": "heart"},
+        {"id": "pharmaceutical", "name": "Pharmaceutical", "icon": "thermometer"},
+        {"id": "real_estate", "name": "Real Estate", "icon": "home"},
+        {"id": "restaurant", "name": "Restaurant & Dining", "icon": "coffee"},
+        {"id": "retail", "name": "Retail", "icon": "shopping-bag"},
         {"id": "sales", "name": "Sales", "icon": "shopping-cart"},
-        {"id": "general", "name": "General / Other", "icon": "grid"},
+        {"id": "sports", "name": "Sports & Fitness", "icon": "award"},
+        {"id": "technology", "name": "Technology", "icon": "cpu"},
+        {"id": "telecom", "name": "Telecommunications", "icon": "phone"},
+        {"id": "transportation", "name": "Transportation", "icon": "navigation"},
+        {"id": "travel", "name": "Travel & Tourism", "icon": "map"},
+        {"id": "general", "name": "Other", "icon": "grid"},
     ]
     return {"industries": industries}
 
@@ -802,6 +1060,361 @@ async def delete_custom_tag(
     save_user_preferences(user_id, prefs)
 
     return {"success": True, "custom_tags": custom_tags}
+
+
+# Business Card Endpoints
+
+@app.get("/api/business-card")
+async def get_business_card(user_id: Optional[str] = Depends(get_user_id_from_token)):
+    """Get the current user's business card"""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    card = load_business_card(user_id)
+    return {"card": card}
+
+
+@app.post("/api/business-card")
+async def save_business_card_endpoint(
+    card_input: BusinessCardInput,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Create or update the user's business card"""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    # Load existing card or create new
+    existing_card = load_business_card(user_id)
+
+    if existing_card:
+        # Update existing card
+        card = existing_card
+        card.update(card_input.model_dump(exclude_unset=True))
+        card["updated_at"] = datetime.now().isoformat()
+    else:
+        # Create new card
+        card = card_input.model_dump()
+        card["id"] = str(uuid.uuid4())
+        card["user_id"] = user_id
+        card["share_slug"] = generate_share_slug(card_input.full_name)
+        card["created_at"] = datetime.now().isoformat()
+        card["updated_at"] = datetime.now().isoformat()
+
+    save_business_card(user_id, card)
+
+    return {"success": True, "card": card}
+
+
+@app.get("/api/business-card/vcard")
+async def get_business_card_vcard(user_id: Optional[str] = Depends(get_user_id_from_token)):
+    """Generate and return vCard for the user's business card"""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    card = load_business_card(user_id)
+    if not card:
+        raise HTTPException(status_code=404, detail="Business card not found")
+
+    vcard_content = generate_vcard(card)
+
+    from fastapi.responses import Response
+    return Response(
+        content=vcard_content,
+        media_type="text/vcard",
+        headers={
+            "Content-Disposition": f"attachment; filename={card.get('full_name', 'contact').replace(' ', '_')}.vcf"
+        }
+    )
+
+
+@app.get("/card/{share_slug}")
+async def get_public_business_card(share_slug: str):
+    """Get a business card by its public share slug (no auth required)"""
+    from fastapi.responses import HTMLResponse
+
+    # Search through all users' business cards for the matching slug
+    users_dir = os.path.join(DATA_DIR, "users")
+    card_data = None
+
+    if os.path.exists(users_dir):
+        for user_id in os.listdir(users_dir):
+            user_dir = os.path.join(users_dir, user_id)
+            card_file = os.path.join(user_dir, "business_card.json")
+
+            if os.path.exists(card_file):
+                try:
+                    with open(card_file, "r") as f:
+                        card = json.load(f)
+                        if card.get("share_slug") == share_slug:
+                            card_data = card
+                            break
+                except Exception as e:
+                    print(f"Error reading card file: {e}")
+                    continue
+
+    if not card_data:
+        return HTMLResponse(content="""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Card Not Found - Reachr</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f0f13; color: #e5e5e5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+                .container { text-align: center; padding: 40px; }
+                h1 { color: #9ca3af; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Card Not Found</h1>
+                <p>This business card doesn't exist or has been removed.</p>
+            </div>
+        </body>
+        </html>
+        """, status_code=404)
+
+    # Generate HTML business card page
+    name = card_data.get("full_name", "")
+    title = card_data.get("title", "")
+    company = card_data.get("company", "")
+    email = card_data.get("email", "")
+    phone = card_data.get("phone", "")
+    website = card_data.get("website", "")
+    linkedin = card_data.get("linkedin_url", "")
+    avatar = card_data.get("avatar_url", "")
+
+    avatar_html = f'<img src="{avatar}" alt="{name}" class="avatar">' if avatar else f'<div class="avatar-placeholder">{name[:2].upper() if name else "?"}</div>'
+
+    contact_html = ""
+    if email:
+        contact_html += f'<a href="mailto:{email}" class="contact-item"><span class="icon">✉️</span>{email}</a>'
+    if phone:
+        contact_html += f'<a href="tel:{phone}" class="contact-item"><span class="icon">📱</span>{phone}</a>'
+    if website:
+        contact_html += f'<a href="{website}" target="_blank" class="contact-item"><span class="icon">🌐</span>{website}</a>'
+    if linkedin:
+        contact_html += f'<a href="{linkedin}" target="_blank" class="contact-item"><span class="icon">💼</span>LinkedIn</a>'
+
+    # Build deep link URL for adding to Reachr app
+    import urllib.parse
+    # Only include non-empty params to avoid routing issues
+    deep_link_params = {"name": name}
+    if email:
+        deep_link_params["email"] = email
+    if phone:
+        deep_link_params["phone"] = phone
+    if title:
+        deep_link_params["title"] = title
+    if company:
+        deep_link_params["company"] = company
+    if linkedin:
+        deep_link_params["linkedin"] = linkedin
+    # Use quote_via to ensure spaces are %20 not +
+    encoded_params = urllib.parse.urlencode(deep_link_params, quote_via=urllib.parse.quote)
+    deep_link = f"reachr://add-contact?{encoded_params}"
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{name} - Digital Business Card</title>
+        <meta property="og:title" content="{name}'s Business Card">
+        <meta property="og:description" content="{title} at {company}" if title and company else "{name}'s digital business card">
+        <style>
+            * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                background: linear-gradient(135deg, #0f0f13 0%, #1a1a2e 100%);
+                color: #e5e5e5;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }}
+            .card {{
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                border-radius: 24px;
+                padding: 32px;
+                max-width: 400px;
+                width: 100%;
+                box-shadow: 0 20px 60px rgba(124, 58, 237, 0.3);
+                border: 1px solid rgba(255,255,255,0.1);
+                position: relative;
+                overflow: hidden;
+            }}
+            .accent-line {{
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #00d4ff, #7c3aed, #f472b6);
+            }}
+            .header {{
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                margin-bottom: 24px;
+                margin-top: 8px;
+            }}
+            .avatar {{
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 3px solid rgba(0, 212, 255, 0.5);
+            }}
+            .avatar-placeholder {{
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #7c3aed, #06b6d4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 28px;
+                font-weight: 700;
+                color: white;
+            }}
+            .info h1 {{
+                font-size: 24px;
+                font-weight: 700;
+                margin-bottom: 4px;
+                color: #ffffff;
+            }}
+            .info .title {{
+                font-size: 16px;
+                color: #00d4ff;
+                margin-bottom: 2px;
+            }}
+            .info .company {{
+                font-size: 14px;
+                color: rgba(255,255,255,0.6);
+            }}
+            .contacts {{
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                padding-top: 20px;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }}
+            .contact-item {{
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: rgba(255,255,255,0.8);
+                text-decoration: none;
+                padding: 12px 16px;
+                background: rgba(0, 212, 255, 0.1);
+                border-radius: 12px;
+                transition: all 0.2s;
+            }}
+            .contact-item:hover {{
+                background: rgba(0, 212, 255, 0.2);
+                transform: translateX(4px);
+            }}
+            .icon {{
+                font-size: 18px;
+            }}
+            .footer {{
+                margin-top: 24px;
+                text-align: center;
+                font-size: 12px;
+                color: rgba(255,255,255,0.4);
+            }}
+            .footer a {{
+                color: #7c3aed;
+                text-decoration: none;
+            }}
+            .add-button {{
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                margin-top: 24px;
+                padding: 16px 24px;
+                background: linear-gradient(135deg, #7c3aed, #9333ea);
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+                border-radius: 14px;
+                text-decoration: none;
+                box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+                transition: all 0.2s;
+            }}
+            .add-button:hover {{
+                transform: translateY(-2px);
+                box-shadow: 0 12px 32px rgba(124, 58, 237, 0.5);
+            }}
+            .add-button span {{
+                font-size: 20px;
+                font-weight: 700;
+            }}
+            .app-hint {{
+                text-align: center;
+                margin-top: 12px;
+                font-size: 14px;
+                color: rgba(255,255,255,0.5);
+            }}
+            .app-hint a {{
+                color: #a78bfa;
+                text-decoration: none;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="accent-line"></div>
+            <div class="header">
+                {avatar_html}
+                <div class="info">
+                    <h1>{name}</h1>
+                    {"<p class='title'>" + title + "</p>" if title else ""}
+                    {"<p class='company'>" + company + "</p>" if company else ""}
+                </div>
+            </div>
+            <div class="contacts">
+                {contact_html}
+            </div>
+            <a href="{deep_link}" class="add-button" id="addButton" onclick="handleAddClick(event)">
+                <span>+</span> Add to Reachr
+            </a>
+            <p class="app-hint" id="appHint" style="display: none;">
+                Don't have Reachr? <a href="#">Download the app</a>
+            </p>
+            <div class="footer">
+                Shared via <a href="#">Reachr</a>
+            </div>
+        </div>
+        <script>
+            function handleAddClick(e) {{
+                // Try to open the app
+                var deepLink = "{deep_link}";
+                var start = Date.now();
+
+                // Set a timeout to show hint if app didn't open
+                setTimeout(function() {{
+                    // If we're still here after 1.5s, app probably isn't installed
+                    if (Date.now() - start < 2000) {{
+                        document.getElementById('appHint').style.display = 'block';
+                    }}
+                }}, 1500);
+
+                // Try opening the deep link
+                window.location.href = deepLink;
+                e.preventDefault();
+            }}
+        </script>
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html)
 
 
 if __name__ == "__main__":

@@ -14,6 +14,8 @@ import {
   LayoutAnimation,
   UIManager,
 } from 'react-native';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import { RootTabParamList } from '../navigation/AppNavigator';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -35,9 +37,12 @@ import { commonStyles } from '../styles/common';
 import * as api from '../services/api';
 import { ExtractedTags } from '../types';
 
+type AddContactRouteProp = RouteProp<RootTabParamList, 'Add'>;
+
 type Step = 'input' | 'review' | 'done';
 
 export default function AddContactScreen() {
+  const route = useRoute<AddContactRouteProp>();
   const [step, setStep] = useState<Step>('input');
   const [transcript, setTranscript] = useState('');
   const [cardText, setCardText] = useState('');
@@ -51,6 +56,30 @@ export default function AddContactScreen() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle deep link prefill data
+  useEffect(() => {
+    const params = route.params;
+    if (params?.name) {
+      // Pre-fill data from shared business card
+      const prefillData: ExtractedTags = {
+        name: params.name,
+        email: params.email || undefined,
+        phone: params.phone || undefined,
+        role: params.title || undefined,
+        company: params.company || undefined,
+        tags: ['shared contact', 'reachr'],
+      };
+      setExtractedData(prefillData);
+      if (params.linkedin) {
+        setLinkedinUrl(params.linkedin);
+      }
+      // Generate a context note
+      setTranscript(`Contact shared via Reachr business card. ${params.name}${params.title ? `, ${params.title}` : ''}${params.company ? ` at ${params.company}` : ''}.`);
+      // Go directly to review step
+      setStep('review');
+    }
+  }, [route.params]);
 
   // Collapsible sections state - Voice Notes expanded by default
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -231,8 +260,8 @@ export default function AddContactScreen() {
   // Get priority info
   const getPriorityInfo = (value: number) => {
     if (value >= 67) return { label: 'High', color: colors.purple[500] };
-    if (value >= 34) return { label: 'Medium', color: colors.cyan[500] };
-    return { label: 'Low', color: colors.cyan[700] };
+    if (value >= 34) return { label: 'Medium', color: '#A78BFA' };
+    return { label: 'Low', color: '#8B5CF6' };
   };
 
   // Success screen
@@ -420,7 +449,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#22D3EE' }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#C4B5FD' }]}>
                 <Icon name="mic" size={18} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -443,7 +472,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color="#22D3EE" />
+                <Icon name="chevron-up" size={18} color="#C4B5FD" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -469,7 +498,7 @@ export default function AddContactScreen() {
                 </View>
                 {recordingPath && !isTranscribing && (
                   <View style={styles.recordingDone}>
-                    <Icon name="check" size={14} color={colors.cyan[400]} />
+                    <Icon name="check" size={14} color="#A78BFA" />
                     <Text style={styles.recordingDoneText}>Done</Text>
                   </View>
                 )}
@@ -495,7 +524,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#67E8F9' }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#A78BFA' }]}>
                 <Icon name="camera" size={16} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -518,7 +547,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color="#67E8F9" />
+                <Icon name="chevron-up" size={18} color="#A78BFA" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -532,7 +561,7 @@ export default function AddContactScreen() {
                   </TouchableOpacity>
                   {isOcrProcessing && (
                     <View style={styles.imageOverlay}>
-                      <ActivityIndicator color={colors.cyan[400]} size="large" />
+                      <ActivityIndicator color="#A78BFA" size="large" />
                     </View>
                   )}
                   {cardText && (
@@ -564,7 +593,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#A5B4FC' }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#8B5CF6' }]}>
                 <Icon name="clock" size={16} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -587,7 +616,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color="#A5B4FC" />
+                <Icon name="chevron-up" size={18} color="#8B5CF6" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -602,7 +631,7 @@ export default function AddContactScreen() {
                   style={styles.dateTimeButton}
                   onPress={() => setShowDatePicker(true)}
                 >
-                  <Icon name="calendar" size={16} color={colors.cyan[400]} />
+                  <Icon name="calendar" size={16} color="#8B5CF6" />
                   <Text style={styles.dateTimeText}>
                     {meetingDate.toLocaleDateString()} at {meetingDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </Text>
@@ -660,7 +689,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#C084FC' }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#7C3AED' }]}>
                 <Icon name="linkedin" size={14} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -683,7 +712,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color="#C084FC" />
+                <Icon name="chevron-up" size={18} color="#7C3AED" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -710,7 +739,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#A855F7' }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#6D28D9' }]}>
                 <Icon name="star" size={14} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -733,7 +762,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color="#A855F7" />
+                <Icon name="chevron-up" size={18} color="#6D28D9" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -860,17 +889,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.cyan[900],
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.cyan[700],
+    borderColor: 'rgba(167, 139, 250, 0.4)',
   },
   recordingDoneText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.cyan[400],
+    color: '#A78BFA',
   },
   uploadButton: {
     borderWidth: 2,
@@ -1095,7 +1124,7 @@ const styles = StyleSheet.create({
   },
   tagCount: {
     fontSize: 12,
-    color: colors.cyan[400],
+    color: '#A78BFA',
     fontWeight: '500',
     marginLeft: 8,
   },
@@ -1153,7 +1182,7 @@ const styles = StyleSheet.create({
   },
   successHighlight: {
     fontWeight: '700',
-    color: colors.cyan[400],
+    color: '#A78BFA',
   },
   successButton: {
     flexDirection: 'row',
