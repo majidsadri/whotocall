@@ -18,54 +18,55 @@ export const commonStyles = StyleSheet.create({
     paddingBottom: 120,
   },
 
-  // Cards - Dark mode elevated style
+  // Cards - Premium glassmorphism style
   card: {
     backgroundColor: colors.surface,
     borderRadius: 24,
-    marginBottom: 18,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 6 },
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
-    elevation: 5,
+    elevation: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   cardHeader: {
     paddingHorizontal: 20,
     paddingVertical: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
+    borderBottomWidth: 0,
+    backgroundColor: 'transparent',
   },
 
   cardContent: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 0,
+    paddingBottom: 20,
   },
 
-  // Buttons - Primary with glow effect
+  // Buttons - Premium with glow effect
   btnPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 14,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
+    backgroundColor: colors.purple[600],
+    paddingHorizontal: 28,
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: colors.purple[600],
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowRadius: 16,
+    elevation: 8,
   },
 
   btnPrimaryText: {
     color: colors.white,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
 
@@ -74,12 +75,12 @@ export const commonStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
 
   btnSecondaryText: {
@@ -119,39 +120,39 @@ export const commonStyles = StyleSheet.create({
     opacity: 0.5,
   },
 
-  // Inputs - Dark mode style
+  // Inputs - Premium dark style
   input: {
-    height: 50,
-    paddingHorizontal: 16,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 14,
-    fontSize: 15,
+    height: 54,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    fontSize: 16,
     color: colors.text,
   },
 
   inputFocused: {
-    borderColor: colors.primary,
-    backgroundColor: colors.surfaceElevated,
-    shadowColor: colors.primary,
+    borderColor: colors.purple[500],
+    backgroundColor: 'rgba(124, 58, 237, 0.08)',
+    shadowColor: colors.purple[500],
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 12,
   },
 
   textarea: {
-    minHeight: 110,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 14,
-    fontSize: 15,
+    minHeight: 120,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    fontSize: 16,
     color: colors.text,
     textAlignVertical: 'top',
-    lineHeight: 22,
+    lineHeight: 24,
   },
 
   // Labels - Refined typography
@@ -165,16 +166,16 @@ export const commonStyles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
   },
 
   sectionSubtitle: {
     fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
+    color: colors.gray[500],
+    marginTop: 3,
   },
 
   // Tags - Pill style with cyan accent
@@ -196,28 +197,30 @@ export const commonStyles = StyleSheet.create({
     color: colors.cyan[300],
   },
 
-  // Badges - Modern pill badges
+  // Badges - Premium pill badges
   badge: {
-    height: 24,
-    paddingHorizontal: 10,
-    backgroundColor: colors.gray[800],
-    borderRadius: 12,
+    height: 26,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
 
   badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.gray[400],
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
 
   badgeGreen: {
-    backgroundColor: colors.cyan[900],
+    backgroundColor: 'rgba(6, 182, 212, 0.15)',
     borderWidth: 1,
-    borderColor: colors.cyan[700],
+    borderColor: 'rgba(6, 182, 212, 0.3)',
   },
 
   badgeGreenText: {

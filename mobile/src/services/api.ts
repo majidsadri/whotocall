@@ -1,10 +1,19 @@
 import { Contact, ExtractedTags, SearchResult } from '../types';
+import { supabase } from '../lib/supabase';
 
-// Configure base URL
-// Development: localhost, Production: EC2 server
-const BASE_URL = __DEV__
-  ? 'http://localhost:8000'
-  : 'http://18.215.164.114:8080';
+// Configure base URL - Always use EC2 so Simulator and iPhone share the same database
+const BASE_URL = 'http://18.215.164.114:8080';
+
+// Get auth headers from Supabase session
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    return {
+      'Authorization': `Bearer ${session.access_token}`,
+    };
+  }
+  return {};
+}
 
 // Helper for API requests
 async function apiRequest<T>(
@@ -12,11 +21,13 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
+  const authHeaders = await getAuthHeaders();
 
   const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options.headers,
     },
   });
@@ -35,10 +46,14 @@ async function apiFormRequest<T>(
   formData: FormData
 ): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
+  const authHeaders = await getAuthHeaders();
 
   const response = await fetch(url, {
     method: 'POST',
     body: formData,
+    headers: {
+      ...authHeaders,
+    },
     // Don't set Content-Type header - fetch will set it with boundary
   });
 
@@ -170,6 +185,88 @@ export async function enrichContact(params: {
     method: 'POST',
     body: JSON.stringify(params),
   });
+}
+
+// Get current user info
+export async function getCurrentUser(): Promise<{ authenticated: boolean; user_id: string | null }> {
+  return apiRequest('/api/me');
+}
+
+// Migrate contacts to current user's account
+export async function migrateContacts(): Promise<{
+  success: boolean;
+  message: string;
+  migrated: number;
+  total_contacts: number;
+}> {
+  return apiRequest('/api/migrate-contacts', { method: 'POST' });
+}
+
+// User preferences API
+export async function getPreferences(): Promise<{
+  industry: string | null;
+  custom_tags: string[];
+  suggested_tags: string[];
+}> {
+  return apiRequest('/api/preferences');
+}
+
+export async function updatePreferences(preferences: {
+  industry?: string;
+  custom_tags?: string[];
+}): Promise<{
+  success: boolean;
+  preferences: {
+    industry: string | null;
+    custom_tags: string[];
+    suggested_tags: string[];
+  };
+}> {
+  return apiRequest('/api/preferences', {
+    method: 'PUT',
+    body: JSON.stringify(preferences),
+  });
+}
+
+// Tags API
+export async function getAllTags(): Promise<{
+  tags: Array<{
+    tag: string;
+    count: number;
+    source: 'custom' | 'suggested' | 'contact' | 'default';
+  }>;
+}> {
+  return apiRequest('/api/tags');
+}
+
+export async function addCustomTag(tag: string): Promise<{
+  success: boolean;
+  custom_tags: string[];
+}> {
+  return apiRequest('/api/tags', {
+    method: 'POST',
+    body: JSON.stringify({ tag }),
+  });
+}
+
+export async function deleteCustomTag(tagName: string): Promise<{
+  success: boolean;
+  custom_tags: string[];
+}> {
+  return apiRequest(`/api/tags/${encodeURIComponent(tagName)}`, {
+    method: 'DELETE',
+  });
+}
+
+// Industries API
+export async function getIndustries(): Promise<{
+  industries: Array<{
+    id: string;
+    name: string;
+    icon: string;
+  }>;
+}> {
+  return apiRequest('/api/industries');
 }
 
 // Web search API

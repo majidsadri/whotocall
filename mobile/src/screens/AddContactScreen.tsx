@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,20 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  SafeAreaView,
   Alert,
   ActivityIndicator,
   Platform,
+  Animated,
+  LayoutAnimation,
+  UIManager,
 } from 'react-native';
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/Feather';
-import ReachrLogo from '../components/ReachrLogo';
 
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { useImagePicker } from '../hooks/useImagePicker';
@@ -23,6 +29,7 @@ import RecordButton from '../components/RecordButton';
 import PrioritySlider from '../components/PrioritySlider';
 import TagBadge, { getTagVariant } from '../components/TagBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ScreenWrapper from '../components/ScreenWrapper';
 import { colors } from '../styles/colors';
 import { commonStyles } from '../styles/common';
 import * as api from '../services/api';
@@ -44,6 +51,42 @@ export default function AddContactScreen() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Collapsible sections state - Voice Notes expanded by default
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    voiceNotes: true,
+    businessCard: false,
+    meetingDetails: false,
+    linkedin: false,
+    priority: false,
+  });
+
+  // Animated values for chevron rotation
+  const chevronAnims = useRef({
+    voiceNotes: new Animated.Value(1),
+    businessCard: new Animated.Value(0),
+    meetingDetails: new Animated.Value(0),
+    linkedin: new Animated.Value(0),
+    priority: new Animated.Value(0),
+  }).current;
+
+  // Toggle section expansion
+  const toggleSection = (section: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    const isExpanding = !expandedSections[section];
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+
+    // Animate chevron rotation
+    Animated.timing(chevronAnims[section as keyof typeof chevronAnims], {
+      toValue: isExpanding ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
 
   const {
     isRecording,
@@ -195,7 +238,7 @@ export default function AddContactScreen() {
   // Success screen
   if (step === 'done') {
     return (
-      <SafeAreaView style={commonStyles.safeArea}>
+      <ScreenWrapper>
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
             <Icon name="check-circle" size={40} color={colors.white} />
@@ -212,21 +255,21 @@ export default function AddContactScreen() {
             <Text style={styles.successButtonText}>Add Another Contact</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </ScreenWrapper>
     );
   }
 
   // Review screen
   if (step === 'review' && extractedData) {
     return (
-      <SafeAreaView style={commonStyles.safeArea}>
+      <ScreenWrapper>
         <ScrollView style={commonStyles.container} contentContainerStyle={styles.scrollContent}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={styles.reviewHeader}>
             <TouchableOpacity onPress={() => setStep('input')}>
-              <Icon name="arrow-left" size={24} color={colors.gray[700]} />
+              <Icon name="arrow-left" size={24} color={colors.gray[500]} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Review Contact</Text>
+            <Text style={styles.reviewHeaderTitle}>Review Contact</Text>
             <View style={{ width: 24 }} />
           </View>
 
@@ -351,30 +394,34 @@ export default function AddContactScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </ScreenWrapper>
     );
   }
 
   // Input screen
   return (
-    <SafeAreaView style={commonStyles.safeArea}>
+    <ScreenWrapper>
       <ScrollView
         style={commonStyles.container}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <View style={styles.appHeader}>
-          <ReachrLogo size="medium" variant="purple" />
-          <Text style={styles.tagline}>Add a new contact</Text>
+        {/* Page Title */}
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>Add Contact</Text>
+          <Text style={styles.pageSubtitle}>Capture and save new connections</Text>
         </View>
 
         {/* Voice Recording Card */}
         <View style={commonStyles.card}>
-          <View style={commonStyles.cardHeader}>
+          <TouchableOpacity
+            style={commonStyles.cardHeader}
+            onPress={() => toggleSection('voiceNotes')}
+            activeOpacity={0.7}
+          >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: colors.cyan[600] }]}>
-                <Icon name="mic" size={14} color={colors.white} />
+              <View style={[styles.iconBox, { backgroundColor: colors.cyan[500] }]}>
+                <Icon name="mic" size={18} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={commonStyles.sectionTitle}>Voice Notes</Text>
@@ -383,52 +430,73 @@ export default function AddContactScreen() {
               <View style={[commonStyles.badge, commonStyles.badgeGreen]}>
                 <Text style={[commonStyles.badgeText, commonStyles.badgeGreenText]}>Required</Text>
               </View>
+              <Animated.View
+                style={[
+                  styles.chevronContainer,
+                  {
+                    transform: [{
+                      rotate: chevronAnims.voiceNotes.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '180deg'],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <Icon name="chevron-up" size={18} color={colors.cyan[400]} />
+              </Animated.View>
             </View>
-          </View>
-          <View style={commonStyles.cardContent}>
-            <View style={styles.recordingRow}>
-              <RecordButton
-                isRecording={isRecording}
-                isProcessing={isTranscribing}
-                onPress={handleRecordPress}
-              />
-              <View style={styles.recordingInfo}>
-                <Text style={styles.recordingTitle}>
-                  {isTranscribing
-                    ? 'Transcribing...'
-                    : isRecording
-                    ? 'Recording...'
-                    : 'Tap to record'}
-                </Text>
-                <Text style={styles.recordingSubtitle}>
-                  {isRecording ? 'Tap again to stop' : 'Tell me about this person'}
-                </Text>
-              </View>
-              {recordingPath && !isTranscribing && (
-                <View style={styles.recordingDone}>
-                  <Icon name="check" size={14} color={colors.cyan[400]} />
-                  <Text style={styles.recordingDoneText}>Done</Text>
+          </TouchableOpacity>
+          {expandedSections.voiceNotes && (
+            <View style={commonStyles.cardContent}>
+              <View style={styles.recordingRow}>
+                <RecordButton
+                  isRecording={isRecording}
+                  isProcessing={isTranscribing}
+                  onPress={handleRecordPress}
+                />
+                <View style={styles.recordingInfo}>
+                  <Text style={styles.recordingTitle}>
+                    {isTranscribing
+                      ? 'Transcribing...'
+                      : isRecording
+                      ? 'Recording...'
+                      : 'Tap to record'}
+                  </Text>
+                  <Text style={styles.recordingSubtitle}>
+                    {isRecording ? 'Tap again to stop' : 'Tell me about this person'}
+                  </Text>
                 </View>
-              )}
+                {recordingPath && !isTranscribing && (
+                  <View style={styles.recordingDone}>
+                    <Icon name="check" size={14} color={colors.cyan[400]} />
+                    <Text style={styles.recordingDoneText}>Done</Text>
+                  </View>
+                )}
+              </View>
+              <TextInput
+                style={[commonStyles.textarea, { marginTop: 16 }]}
+                value={transcript}
+                onChangeText={setTranscript}
+                placeholder="How did you meet? What do they do? Any notable details..."
+                placeholderTextColor={colors.gray[400]}
+                multiline
+                numberOfLines={4}
+              />
             </View>
-            <TextInput
-              style={[commonStyles.textarea, { marginTop: 16 }]}
-              value={transcript}
-              onChangeText={setTranscript}
-              placeholder="How did you meet? What do they do? Any notable details..."
-              placeholderTextColor={colors.gray[400]}
-              multiline
-              numberOfLines={4}
-            />
-          </View>
+          )}
         </View>
 
         {/* Business Card */}
         <View style={commonStyles.card}>
-          <View style={commonStyles.cardHeader}>
+          <TouchableOpacity
+            style={commonStyles.cardHeader}
+            onPress={() => toggleSection('businessCard')}
+            activeOpacity={0.7}
+          >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: colors.gray[100] }]}>
-                <Icon name="camera" size={14} color={colors.gray[500]} />
+              <View style={[styles.iconBox, { backgroundColor: colors.purple[600] }]}>
+                <Icon name="camera" size={16} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={commonStyles.sectionTitle}>Business Card</Text>
@@ -437,43 +505,67 @@ export default function AddContactScreen() {
               <View style={commonStyles.badge}>
                 <Text style={commonStyles.badgeText}>Optional</Text>
               </View>
+              <Animated.View
+                style={[
+                  styles.chevronContainer,
+                  {
+                    transform: [{
+                      rotate: chevronAnims.businessCard.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '180deg'],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <Icon name="chevron-up" size={18} color={colors.purple[400]} />
+              </Animated.View>
             </View>
-          </View>
-          <View style={commonStyles.cardContent}>
-            {imageUri ? (
-              <View style={styles.imagePreview}>
-                <Image source={{ uri: imageUri }} style={styles.cardImage} />
-                <TouchableOpacity style={styles.removeImage} onPress={clearImage}>
-                  <Icon name="x" size={16} color={colors.white} />
+          </TouchableOpacity>
+          {expandedSections.businessCard && (
+            <View style={commonStyles.cardContent}>
+              {imageUri ? (
+                <View style={styles.imagePreview}>
+                  <Image source={{ uri: imageUri }} style={styles.cardImage} />
+                  <TouchableOpacity style={styles.removeImage} onPress={clearImage}>
+                    <Icon name="x" size={16} color={colors.white} />
+                  </TouchableOpacity>
+                  {isOcrProcessing && (
+                    <View style={styles.imageOverlay}>
+                      <ActivityIndicator color={colors.cyan[400]} size="large" />
+                    </View>
+                  )}
+                  {cardText && (
+                    <View style={styles.ocrPreview}>
+                      <Text style={styles.ocrPreviewText} numberOfLines={2}>
+                        Extracted: {cardText.slice(0, 50)}...
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <TouchableOpacity style={styles.uploadButton} onPress={showPicker}>
+                  <View style={styles.uploadIcon}>
+                    <Icon name="camera" size={26} color={colors.white} />
+                  </View>
+                  <Text style={styles.uploadText}>Tap to scan or upload</Text>
+                  <Text style={styles.uploadHint}>Business card, name badge, etc.</Text>
                 </TouchableOpacity>
-                {isOcrProcessing && (
-                  <View style={styles.imageOverlay}>
-                    <ActivityIndicator color={colors.cyan[400]} size="large" />
-                  </View>
-                )}
-                {cardText && (
-                  <View style={styles.ocrPreview}>
-                    <Text style={styles.ocrPreviewText} numberOfLines={2}>
-                      Extracted: {cardText.slice(0, 50)}...
-                    </Text>
-                  </View>
-                )}
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.uploadButton} onPress={showPicker}>
-                <Icon name="camera" size={32} color={colors.gray[300]} />
-                <Text style={styles.uploadText}>Tap to scan or upload</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Meeting Details */}
         <View style={commonStyles.card}>
-          <View style={commonStyles.cardHeader}>
+          <TouchableOpacity
+            style={commonStyles.cardHeader}
+            onPress={() => toggleSection('meetingDetails')}
+            activeOpacity={0.7}
+          >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: colors.gray[100] }]}>
-                <Icon name="clock" size={14} color={colors.gray[500]} />
+              <View style={[styles.iconBox, { backgroundColor: colors.green[600] }]}>
+                <Icon name="clock" size={16} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={commonStyles.sectionTitle}>Meeting Details</Text>
@@ -482,67 +574,91 @@ export default function AddContactScreen() {
               <View style={commonStyles.badge}>
                 <Text style={commonStyles.badgeText}>Auto-filled</Text>
               </View>
-            </View>
-          </View>
-          <View style={commonStyles.cardContent}>
-            {/* Date picker */}
-            <View style={styles.inputGroup}>
-              <Text style={commonStyles.label}>
-                <Icon name="calendar" size={10} /> Date & Time
-              </Text>
-              <TouchableOpacity
-                style={commonStyles.input}
-                onPress={() => setShowDatePicker(true)}
+              <Animated.View
+                style={[
+                  styles.chevronContainer,
+                  {
+                    transform: [{
+                      rotate: chevronAnims.meetingDetails.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '180deg'],
+                      }),
+                    }],
+                  },
+                ]}
               >
-                <Text style={{ color: colors.gray[900] }}>
-                  {meetingDate.toLocaleDateString()} {meetingDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-              </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker
-                  value={meetingDate}
-                  mode="datetime"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={(event, date) => {
-                    setShowDatePicker(Platform.OS === 'ios');
-                    if (date) setMeetingDate(date);
-                  }}
-                />
-              )}
+                <Icon name="chevron-up" size={18} color={colors.green[400]} />
+              </Animated.View>
             </View>
-
-            {/* Location */}
-            <View style={[styles.inputGroup, { marginTop: 16 }]}>
-              <Text style={commonStyles.label}>
-                <Icon name="map-pin" size={10} /> Location
-              </Text>
-              <View style={styles.locationRow}>
-                <TextInput
-                  style={[commonStyles.input, { flex: 1 }]}
-                  value={meetingLocation}
-                  onChangeText={setMeetingLocation}
-                  placeholder="City, venue, or event name..."
-                  placeholderTextColor={colors.gray[400]}
-                />
+          </TouchableOpacity>
+          {expandedSections.meetingDetails && (
+            <View style={commonStyles.cardContent}>
+              {/* Date picker */}
+              <View style={styles.inputGroup}>
+                <Text style={commonStyles.label}>
+                  <Icon name="calendar" size={10} /> Date & Time
+                </Text>
                 <TouchableOpacity
-                  style={commonStyles.btnIcon}
-                  onPress={getCurrentLocation}
-                  disabled={locationLoading}
+                  style={styles.dateTimeButton}
+                  onPress={() => setShowDatePicker(true)}
                 >
-                  {locationLoading ? (
-                    <ActivityIndicator size="small" color={colors.gray[500]} />
-                  ) : (
-                    <Icon name="navigation" size={16} color={colors.gray[500]} />
-                  )}
+                  <Icon name="calendar" size={16} color={colors.cyan[400]} />
+                  <Text style={styles.dateTimeText}>
+                    {meetingDate.toLocaleDateString()} at {meetingDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                  <Icon name="chevron-down" size={16} color={colors.gray[500]} />
                 </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={meetingDate}
+                    mode="datetime"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, date) => {
+                      setShowDatePicker(Platform.OS === 'ios');
+                      if (date) setMeetingDate(date);
+                    }}
+                    themeVariant="dark"
+                  />
+                )}
+              </View>
+
+              {/* Location */}
+              <View style={[styles.inputGroup, { marginTop: 16 }]}>
+                <Text style={commonStyles.label}>
+                  <Icon name="map-pin" size={10} /> Location
+                </Text>
+                <View style={styles.locationRow}>
+                  <TextInput
+                    style={[commonStyles.input, { flex: 1 }]}
+                    value={meetingLocation}
+                    onChangeText={setMeetingLocation}
+                    placeholder="City, venue, or event name..."
+                    placeholderTextColor={colors.gray[400]}
+                  />
+                  <TouchableOpacity
+                    style={commonStyles.btnIcon}
+                    onPress={getCurrentLocation}
+                    disabled={locationLoading}
+                  >
+                    {locationLoading ? (
+                      <ActivityIndicator size="small" color={colors.gray[500]} />
+                    ) : (
+                      <Icon name="navigation" size={16} color={colors.gray[500]} />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
+          )}
         </View>
 
         {/* LinkedIn */}
         <View style={commonStyles.card}>
-          <View style={commonStyles.cardHeader}>
+          <TouchableOpacity
+            style={commonStyles.cardHeader}
+            onPress={() => toggleSection('linkedin')}
+            activeOpacity={0.7}
+          >
             <View style={styles.sectionHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#0A66C2' }]}>
                 <Icon name="linkedin" size={14} color={colors.white} />
@@ -554,24 +670,45 @@ export default function AddContactScreen() {
               <View style={commonStyles.badge}>
                 <Text style={commonStyles.badgeText}>Optional</Text>
               </View>
+              <Animated.View
+                style={[
+                  styles.chevronContainer,
+                  {
+                    transform: [{
+                      rotate: chevronAnims.linkedin.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '180deg'],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <Icon name="chevron-up" size={18} color={colors.blue[400]} />
+              </Animated.View>
             </View>
-          </View>
-          <View style={commonStyles.cardContent}>
-            <TextInput
-              style={commonStyles.input}
-              value={linkedinUrl}
-              onChangeText={setLinkedinUrl}
-              placeholder="linkedin.com/in/username"
-              placeholderTextColor={colors.gray[400]}
-              autoCapitalize="none"
-              keyboardType="url"
-            />
-          </View>
+          </TouchableOpacity>
+          {expandedSections.linkedin && (
+            <View style={commonStyles.cardContent}>
+              <TextInput
+                style={commonStyles.input}
+                value={linkedinUrl}
+                onChangeText={setLinkedinUrl}
+                placeholder="linkedin.com/in/username"
+                placeholderTextColor={colors.gray[400]}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+            </View>
+          )}
         </View>
 
         {/* Priority */}
         <View style={commonStyles.card}>
-          <View style={commonStyles.cardHeader}>
+          <TouchableOpacity
+            style={commonStyles.cardHeader}
+            onPress={() => toggleSection('priority')}
+            activeOpacity={0.7}
+          >
             <View style={styles.sectionHeader}>
               <View style={[styles.iconBox, { backgroundColor: colors.orange[500] }]}>
                 <Icon name="star" size={14} color={colors.white} />
@@ -583,11 +720,28 @@ export default function AddContactScreen() {
               <Text style={[styles.priorityBadge, { color: getPriorityInfo(priority).color }]}>
                 {getPriorityInfo(priority).label}
               </Text>
+              <Animated.View
+                style={[
+                  styles.chevronContainer,
+                  {
+                    transform: [{
+                      rotate: chevronAnims.priority.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '180deg'],
+                      }),
+                    }],
+                  },
+                ]}
+              >
+                <Icon name="chevron-up" size={18} color={colors.orange[400]} />
+              </Animated.View>
             </View>
-          </View>
-          <View style={commonStyles.cardContent}>
-            <PrioritySlider value={priority} onChange={setPriority} />
-          </View>
+          </TouchableOpacity>
+          {expandedSections.priority && (
+            <View style={commonStyles.cardContent}>
+              <PrioritySlider value={priority} onChange={setPriority} />
+            </View>
+          )}
         </View>
 
         {/* Error message */}
@@ -619,7 +773,7 @@ export default function AddContactScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenWrapper>
   );
 }
 
@@ -628,34 +782,29 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 120,
   },
-  appHeader: {
-    marginBottom: 20,
-    paddingTop: 16,
+  titleSection: {
+    paddingTop: 4,
     paddingBottom: 20,
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    marginHorizontal: -20,
-    marginTop: -20,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  tagline: {
-    fontSize: 16,
-    color: colors.cyan[400],
-    marginTop: 12,
-    letterSpacing: 0.5,
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.text,
+    letterSpacing: -0.5,
+  },
+  pageSubtitle: {
+    fontSize: 14,
     fontWeight: '500',
+    color: colors.gray[500],
+    marginTop: 4,
   },
-  header: {
+  reviewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 24,
   },
-  headerTitle: {
+  reviewHeaderTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
@@ -667,11 +816,27 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  chevronContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   recordingRow: {
     flexDirection: 'row',
@@ -708,20 +873,38 @@ const styles = StyleSheet.create({
     color: colors.cyan[400],
   },
   uploadButton: {
-    borderWidth: 3,
+    borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: colors.purple[700],
-    borderRadius: 20,
-    paddingVertical: 48,
+    borderColor: colors.purple[500],
+    borderRadius: 16,
+    paddingVertical: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.purple[900] + '30',
   },
   uploadText: {
     fontSize: 15,
-    color: colors.purple[400],
+    color: colors.purple[300],
     marginTop: 12,
     fontWeight: '600',
+  },
+  uploadIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: colors.purple[600],
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.purple[500],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  uploadHint: {
+    fontSize: 13,
+    color: colors.gray[500],
+    marginTop: 4,
   },
   imagePreview: {
     borderRadius: 16,
@@ -777,6 +960,23 @@ const styles = StyleSheet.create({
   locationRow: {
     flexDirection: 'row',
     gap: 8,
+  },
+  dateTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 50,
+    paddingHorizontal: 16,
+    backgroundColor: colors.gray[800],
+    borderWidth: 1.5,
+    borderColor: colors.gray[700],
+    borderRadius: 14,
+    gap: 12,
+  },
+  dateTimeText: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+    fontWeight: '500',
   },
   priorityBadge: {
     fontSize: 12,

@@ -6,21 +6,24 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { useAuth } from '../context/AuthContext';
 import ContactCard from '../components/ContactCard';
 import RecordButton from '../components/RecordButton';
+import ScreenWrapper from '../components/ScreenWrapper';
+import IndustryModal from '../components/IndustryModal';
 import { colors } from '../styles/colors';
 import { commonStyles } from '../styles/common';
 import * as api from '../services/api';
 import { Contact, SearchResult } from '../types';
 
 export default function FindContactScreen() {
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -29,41 +32,176 @@ export default function FindContactScreen() {
   const [explanation, setExplanation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [allTags, setAllTags] = useState<{tag: string; count: number}[]>([]);
+  const [allTags, setAllTags] = useState<{tag: string; count: number; source?: string}[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(true);
   const [showAllTags, setShowAllTags] = useState(false);
 
+  // Autocomplete state
+  const [allContacts, setAllContacts] = useState<Contact[]>([]);
+  const [suggestions, setSuggestions] = useState<{type: string; value: string; label: string}[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Industry selection state
+  const [showIndustryModal, setShowIndustryModal] = useState(false);
+  const [currentIndustry, setCurrentIndustry] = useState<string | null>(null);
+
   useEffect(() => {
     fetchTags();
-  }, []);
+    fetchContacts();
+    fetchPreferences();
+  }, [user]);
+
+  const fetchContacts = async () => {
+    try {
+      const response = await api.getContacts({});
+      setAllContacts(response.contacts || []);
+    } catch (err) {
+      console.error('Error fetching contacts:', err);
+    }
+  };
+
+  const fetchPreferences = async () => {
+    if (!user) return;
+    try {
+      const prefs = await api.getPreferences();
+      setCurrentIndustry(prefs.industry);
+    } catch (err) {
+      console.error('Error fetching preferences:', err);
+    }
+  };
+
+  const handleIndustrySelect = (industryId: string) => {
+    setCurrentIndustry(industryId);
+    // Refresh tags after industry selection
+    fetchTags();
+  };
 
   const fetchTags = async () => {
     try {
       setIsLoadingTags(true);
-      const response = await api.getContacts({});
-      const contacts = response.contacts || [];
-
-      const tagCounts: Record<string, number> = {};
-      contacts.forEach((contact: Contact) => {
-        if (contact.tags) {
-          contact.tags.forEach((tag: string) => {
-            const lowerTag = tag.toLowerCase();
-            tagCounts[lowerTag] = (tagCounts[lowerTag] || 0) + 1;
-          });
-        }
-      });
-
-      const sortedTags = Object.entries(tagCounts)
-        .sort((a, b) => b[1] - a[1])
-        .map(([tag, count]) => ({ tag, count }));
-
-      setAllTags(sortedTags);
+      // Use new tags API that includes custom, suggested, and contact-derived tags
+      const response = await api.getAllTags();
+      setAllTags(response.tags || []);
     } catch (err) {
       console.error('Error fetching tags:', err);
+      // Fallback to fetching from contacts if tags API fails
+      try {
+        const contactsResponse = await api.getContacts({});
+        const contacts = contactsResponse.contacts || [];
+        const tagCounts: Record<string, number> = {};
+        contacts.forEach((contact: Contact) => {
+          if (contact.tags) {
+            contact.tags.forEach((tag: string) => {
+              const lowerTag = tag.toLowerCase();
+              tagCounts[lowerTag] = (tagCounts[lowerTag] || 0) + 1;
+            });
+          }
+        });
+        const sortedTags = Object.entries(tagCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([tag, count]) => ({ tag, count }));
+        setAllTags(sortedTags);
+      } catch (fallbackErr) {
+        console.error('Error in fallback tags fetch:', fallbackErr);
+      }
     } finally {
       setIsLoadingTags(false);
     }
+  };
+
+  // Generate autocomplete suggestions based on query
+  const updateSuggestions = (text: string) => {
+    if (!text.trim() || text.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const lowerQuery = text.toLowerCase();
+    const newSuggestions: {type: string; value: string; label: string}[] = [];
+    const seen = new Set<string>();
+
+    // Add matching tags
+    allTags.forEach(({ tag }) => {
+      if (tag.toLowerCase().includes(lowerQuery) && !seen.has(tag.toLowerCase())) {
+        seen.add(tag.toLowerCase());
+        newSuggestions.push({
+          type: 'tag',
+          value: tag,
+          label: tag,
+        });
+      }
+    });
+
+    // Add matching contact names
+    allContacts.forEach((contact) => {
+      if (contact.name && contact.name.toLowerCase().includes(lowerQuery)) {
+        const key = `name:${contact.name.toLowerCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          newSuggestions.push({
+            type: 'name',
+            value: contact.name,
+            label: contact.name,
+          });
+        }
+      }
+
+      // Add matching companies
+      if (contact.company && contact.company.toLowerCase().includes(lowerQuery)) {
+        const key = `company:${contact.company.toLowerCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          newSuggestions.push({
+            type: 'company',
+            value: contact.company,
+            label: contact.company,
+          });
+        }
+      }
+
+      // Add matching roles
+      if (contact.role && contact.role.toLowerCase().includes(lowerQuery)) {
+        const key = `role:${contact.role.toLowerCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          newSuggestions.push({
+            type: 'role',
+            value: contact.role,
+            label: contact.role,
+          });
+        }
+      }
+
+      // Add matching industries
+      if (contact.industry && contact.industry.toLowerCase().includes(lowerQuery)) {
+        const key = `industry:${contact.industry.toLowerCase()}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          newSuggestions.push({
+            type: 'industry',
+            value: contact.industry,
+            label: contact.industry,
+          });
+        }
+      }
+    });
+
+    // Limit to top 8 suggestions
+    setSuggestions(newSuggestions.slice(0, 8));
+    setShowSuggestions(newSuggestions.length > 0);
+  };
+
+  const handleQueryChange = (text: string) => {
+    setQuery(text);
+    updateSuggestions(text);
+  };
+
+  const selectSuggestion = (suggestion: {type: string; value: string; label: string}) => {
+    setQuery(suggestion.value);
+    setShowSuggestions(false);
+    handleSearch(suggestion.value);
   };
 
   const toggleTag = (tag: string) => {
@@ -207,11 +345,12 @@ export default function FindContactScreen() {
   const hasMoreTags = allTags.length > 6;
 
   return (
-    <SafeAreaView style={commonStyles.safeArea}>
+    <ScreenWrapper>
       <View style={commonStyles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Search</Text>
+        {/* Page Title */}
+        <View style={styles.titleSection}>
+          <Text style={styles.pageTitle}>Find Contact</Text>
+          <Text style={styles.pageSubtitle}>Search your network by name or tags</Text>
         </View>
 
         {/* Search Bar */}
@@ -221,11 +360,17 @@ export default function FindContactScreen() {
             <TextInput
               style={styles.searchInput}
               value={query}
-              onChangeText={setQuery}
+              onChangeText={handleQueryChange}
               placeholder="Name, company, tag..."
               placeholderTextColor={colors.gray[500]}
               returnKeyType="search"
-              onSubmitEditing={() => handleSearch()}
+              onSubmitEditing={() => {
+                setShowSuggestions(false);
+                handleSearch();
+              }}
+              onFocus={() => {
+                if (query.length >= 2) updateSuggestions(query);
+              }}
             />
             {query.length > 0 && (
               <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
@@ -240,6 +385,43 @@ export default function FindContactScreen() {
               size={36}
             />
           </View>
+
+          {/* Autocomplete Dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <View style={styles.autocompleteContainer}>
+              {suggestions.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={`${suggestion.type}-${suggestion.value}-${index}`}
+                  style={styles.suggestionItem}
+                  onPress={() => selectSuggestion(suggestion)}
+                >
+                  <View style={styles.suggestionIcon}>
+                    <Icon
+                      name={
+                        suggestion.type === 'tag' ? 'tag' :
+                        suggestion.type === 'name' ? 'user' :
+                        suggestion.type === 'company' ? 'briefcase' :
+                        suggestion.type === 'role' ? 'award' :
+                        'globe'
+                      }
+                      size={14}
+                      color={
+                        suggestion.type === 'tag' ? colors.purple[400] :
+                        suggestion.type === 'name' ? colors.cyan[400] :
+                        suggestion.type === 'company' ? colors.orange[400] :
+                        suggestion.type === 'role' ? colors.green[400] :
+                        colors.blue[400]
+                      }
+                    />
+                  </View>
+                  <View style={styles.suggestionContent}>
+                    <Text style={styles.suggestionText}>{suggestion.label}</Text>
+                    <Text style={styles.suggestionType}>{suggestion.type}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Voice Status */}
@@ -264,17 +446,31 @@ export default function FindContactScreen() {
               <View style={styles.tagsSection}>
                 <View style={styles.tagsSectionHeader}>
                   <Text style={styles.sectionLabel}>Browse by Tag</Text>
-                  <Text style={styles.tagCount}>{allTags.length} tags</Text>
+                  <TouchableOpacity
+                    style={styles.industryButton}
+                    onPress={() => setShowIndustryModal(true)}
+                  >
+                    <Icon name="sliders" size={14} color={colors.cyan[400]} />
+                    <Text style={styles.industryButtonText}>
+                      {currentIndustry
+                        ? currentIndustry.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())
+                        : 'Set Industry'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.tagsGrid}>
-                  {visibleTags.map(({ tag, count }) => {
+                  {visibleTags.map(({ tag, count, source }) => {
                     const isSelected = selectedTags.includes(tag);
+                    const isSuggested = source === 'suggested' || source === 'default';
+                    const isCustom = source === 'custom';
                     return (
                       <TouchableOpacity
                         key={tag}
                         style={[
                           styles.tagChip,
                           isSelected && styles.tagChipSelected,
+                          isSuggested && !isSelected && styles.tagChipSuggested,
+                          isCustom && !isSelected && styles.tagChipCustom,
                         ]}
                         onPress={() => toggleTag(tag)}
                       >
@@ -286,17 +482,19 @@ export default function FindContactScreen() {
                         >
                           {tag}
                         </Text>
-                        <View style={[
-                          styles.tagCountBadge,
-                          isSelected && styles.tagCountBadgeSelected,
-                        ]}>
-                          <Text style={[
-                            styles.tagCountText,
-                            isSelected && styles.tagCountTextSelected,
+                        {count > 0 && (
+                          <View style={[
+                            styles.tagCountBadge,
+                            isSelected && styles.tagCountBadgeSelected,
                           ]}>
-                            {count}
-                          </Text>
-                        </View>
+                            <Text style={[
+                              styles.tagCountText,
+                              isSelected && styles.tagCountTextSelected,
+                            ]}>
+                              {count}
+                            </Text>
+                          </View>
+                        )}
                       </TouchableOpacity>
                     );
                   })}
@@ -371,25 +569,40 @@ export default function FindContactScreen() {
           }
         />
       </View>
-    </SafeAreaView>
+
+      {/* Industry Selection Modal */}
+      <IndustryModal
+        visible={showIndustryModal}
+        onClose={() => setShowIndustryModal(false)}
+        onSelect={handleIndustrySelect}
+        currentIndustry={currentIndustry}
+      />
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  titleSection: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingTop: 4,
+    paddingBottom: 16,
   },
-  headerTitle: {
+  pageTitle: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.5,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.gray[500],
+    marginTop: 4,
   },
   searchSection: {
     paddingHorizontal: 20,
     paddingVertical: 12,
+    zIndex: 10,
   },
   searchBar: {
     flexDirection: 'row',
@@ -413,6 +626,49 @@ const styles = StyleSheet.create({
     height: 24,
     backgroundColor: colors.gray[700],
     marginHorizontal: 12,
+  },
+  autocompleteContainer: {
+    marginTop: 8,
+    backgroundColor: colors.gray[800],
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.gray[700],
+    overflow: 'hidden',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[700],
+  },
+  suggestionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.gray[900],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  suggestionContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  suggestionText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.text,
+    flex: 1,
+  },
+  suggestionType: {
+    fontSize: 12,
+    color: colors.gray[500],
+    textTransform: 'capitalize',
+    marginLeft: 8,
   },
   voiceStatus: {
     flexDirection: 'row',
@@ -465,6 +721,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.gray[500],
   },
+  industryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: colors.cyan[900] + '40',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.cyan[700],
+  },
+  industryButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.cyan[400],
+    marginLeft: 6,
+    textTransform: 'capitalize',
+  },
   tagsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -485,6 +758,15 @@ const styles = StyleSheet.create({
   tagChipSelected: {
     backgroundColor: colors.purple[600],
     borderColor: colors.purple[500],
+  },
+  tagChipSuggested: {
+    backgroundColor: colors.cyan[900] + '40',
+    borderColor: colors.cyan[700],
+    borderStyle: 'dashed',
+  },
+  tagChipCustom: {
+    backgroundColor: colors.green[900] + '40',
+    borderColor: colors.green[700],
   },
   tagText: {
     fontSize: 14,

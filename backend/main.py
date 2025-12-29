@@ -3,7 +3,7 @@ import json
 import uuid
 from datetime import datetime
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -11,6 +11,7 @@ import pytesseract
 from PIL import Image
 import io
 import openai
+import jwt
 
 load_dotenv()
 
@@ -25,8 +26,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Data file path - use 'data' subdirectory relative to this file
-DATA_FILE = os.path.join(os.path.dirname(__file__), "data", "contacts.json")
+# Data directory - use 'data' subdirectory relative to this file
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
+# Supabase JWT secret (get from Supabase dashboard > Settings > API > JWT Secret)
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
+
+
+def get_user_id_from_token(authorization: Optional[str] = Header(None)) -> Optional[str]:
+    """Extract user_id from Supabase JWT token"""
+    if not authorization:
+        return None
+
+    try:
+        # Remove 'Bearer ' prefix
+        token = authorization.replace("Bearer ", "")
+
+        # Decode JWT (without verification if no secret, with verification if secret exists)
+        if SUPABASE_JWT_SECRET:
+            decoded = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated")
+        else:
+            # Decode without verification (for development)
+            decoded = jwt.decode(token, options={"verify_signature": False})
+
+        return decoded.get("sub")  # 'sub' contains the user ID
+    except Exception as e:
+        print(f"Error decoding JWT: {e}")
+        return None
+
+
+def get_user_data_file(user_id: Optional[str]) -> str:
+    """Get the data file path for a specific user"""
+    if user_id:
+        # Per-user contacts file
+        user_dir = os.path.join(DATA_DIR, "users", user_id)
+        os.makedirs(user_dir, exist_ok=True)
+        return os.path.join(user_dir, "contacts.json")
+    else:
+        # Anonymous/shared contacts (legacy)
+        return os.path.join(DATA_DIR, "contacts.json")
 
 # OpenAI client
 openai_client = None
@@ -79,24 +117,110 @@ class ExtractRequest(BaseModel):
     cardText: Optional[str] = None
 
 
+class UserPreferences(BaseModel):
+    industry: Optional[str] = None
+    custom_tags: Optional[List[str]] = []
+    suggested_tags: Optional[List[str]] = []
+
+
+# Industry-specific default tags
+INDUSTRY_DEFAULT_TAGS = {
+    "real_estate": [
+        "buyer", "seller", "investor", "broker", "agent", "property manager",
+        "landlord", "tenant", "developer", "appraiser", "mortgage", "lender",
+        "commercial", "residential", "industrial", "retail", "land", "flip",
+        "rental", "wholesale", "REIT", "hard money", "title company"
+    ],
+    "technology": [
+        "developer", "engineer", "founder", "CEO", "CTO", "product manager",
+        "designer", "startup", "investor", "VC", "SaaS", "AI", "machine learning",
+        "mobile", "web", "cloud", "DevOps", "data scientist", "advisor"
+    ],
+    "finance": [
+        "banker", "investor", "analyst", "trader", "portfolio manager", "CFO",
+        "accountant", "wealth manager", "private equity", "hedge fund", "VC",
+        "angel investor", "fintech", "crypto", "insurance", "lending"
+    ],
+    "healthcare": [
+        "doctor", "physician", "nurse", "surgeon", "specialist", "hospital",
+        "clinic", "pharma", "biotech", "medical device", "health tech",
+        "administrator", "researcher", "patient advocate", "insurance"
+    ],
+    "marketing": [
+        "marketer", "brand manager", "CMO", "agency", "creative director",
+        "content creator", "SEO", "social media", "PR", "influencer",
+        "copywriter", "growth hacker", "digital marketing", "analytics"
+    ],
+    "legal": [
+        "attorney", "lawyer", "partner", "associate", "paralegal", "judge",
+        "corporate law", "litigation", "IP", "contract", "M&A", "compliance",
+        "in-house counsel", "legal tech"
+    ],
+    "consulting": [
+        "consultant", "partner", "analyst", "advisor", "strategy", "management",
+        "operations", "IT consulting", "HR consulting", "change management",
+        "business development", "client"
+    ],
+    "sales": [
+        "sales rep", "account executive", "SDR", "BDR", "sales manager",
+        "VP sales", "enterprise", "SMB", "inside sales", "field sales",
+        "solution engineer", "sales ops", "quota", "pipeline"
+    ],
+    "general": [
+        "networking", "conference", "referral", "LinkedIn", "introduction",
+        "follow up", "potential client", "partner", "mentor", "advisor",
+        "investor", "hiring", "collaboration", "vendor", "supplier"
+    ]
+}
+
+
 # Helper functions
-def load_contacts() -> List[dict]:
-    """Load contacts from JSON file"""
+def load_contacts(user_id: Optional[str] = None) -> List[dict]:
+    """Load contacts from JSON file for a specific user"""
+    data_file = get_user_data_file(user_id)
     try:
-        if os.path.exists(DATA_FILE):
-            with open(DATA_FILE, "r") as f:
+        if os.path.exists(data_file):
+            with open(data_file, "r") as f:
                 data = json.load(f)
                 return data.get("contacts", [])
     except Exception as e:
-        print(f"Error loading contacts: {e}")
+        print(f"Error loading contacts for user {user_id}: {e}")
     return []
 
 
-def save_contacts(contacts: List[dict]):
-    """Save contacts to JSON file"""
-    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
-    with open(DATA_FILE, "w") as f:
+def save_contacts(contacts: List[dict], user_id: Optional[str] = None):
+    """Save contacts to JSON file for a specific user"""
+    data_file = get_user_data_file(user_id)
+    os.makedirs(os.path.dirname(data_file), exist_ok=True)
+    with open(data_file, "w") as f:
         json.dump({"contacts": contacts}, f, indent=2)
+
+
+def get_user_preferences_file(user_id: str) -> str:
+    """Get the preferences file path for a specific user"""
+    user_dir = os.path.join(DATA_DIR, "users", user_id)
+    os.makedirs(user_dir, exist_ok=True)
+    return os.path.join(user_dir, "preferences.json")
+
+
+def load_user_preferences(user_id: str) -> dict:
+    """Load user preferences from JSON file"""
+    prefs_file = get_user_preferences_file(user_id)
+    try:
+        if os.path.exists(prefs_file):
+            with open(prefs_file, "r") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error loading preferences for user {user_id}: {e}")
+    return {"industry": None, "custom_tags": [], "suggested_tags": []}
+
+
+def save_user_preferences(user_id: str, preferences: dict):
+    """Save user preferences to JSON file"""
+    prefs_file = get_user_preferences_file(user_id)
+    os.makedirs(os.path.dirname(prefs_file), exist_ok=True)
+    with open(prefs_file, "w") as f:
+        json.dump(preferences, f, indent=2)
 
 
 def extract_text_from_image(image_bytes: bytes) -> str:
@@ -301,14 +425,69 @@ async def root():
     return {"message": "Reachr API", "version": "1.0.0"}
 
 
+@app.get("/api/me")
+async def get_current_user(user_id: Optional[str] = Depends(get_user_id_from_token)):
+    """Get current user info from auth token"""
+    if not user_id:
+        return {"authenticated": False, "user_id": None}
+    return {"authenticated": True, "user_id": user_id}
+
+
+@app.post("/api/migrate-contacts")
+async def migrate_contacts(user_id: Optional[str] = Depends(get_user_id_from_token)):
+    """Migrate contacts from shared file to user-specific file"""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    # Load contacts from shared/legacy file
+    legacy_file = os.path.join(DATA_DIR, "contacts.json")
+    legacy_contacts = []
+
+    if os.path.exists(legacy_file):
+        try:
+            with open(legacy_file, "r") as f:
+                data = json.load(f)
+                legacy_contacts = data.get("contacts", [])
+        except Exception as e:
+            print(f"Error loading legacy contacts: {e}")
+
+    if not legacy_contacts:
+        return {"success": True, "message": "No contacts to migrate", "migrated": 0}
+
+    # Load existing user contacts
+    user_contacts = load_contacts(user_id)
+
+    # Get existing contact IDs to avoid duplicates
+    existing_ids = {c.get("id") for c in user_contacts}
+
+    # Migrate contacts that don't already exist
+    migrated = 0
+    for contact in legacy_contacts:
+        if contact.get("id") not in existing_ids:
+            contact["user_id"] = user_id
+            user_contacts.append(contact)
+            migrated += 1
+
+    # Save to user file
+    save_contacts(user_contacts, user_id)
+
+    return {
+        "success": True,
+        "message": f"Migrated {migrated} contacts to your account",
+        "migrated": migrated,
+        "total_contacts": len(user_contacts)
+    }
+
+
 @app.get("/api/contacts")
 async def get_contacts(
     industry: Optional[str] = None,
     location: Optional[str] = None,
-    limit: Optional[int] = None
+    limit: Optional[int] = None,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
 ):
-    """Get all contacts with optional filters"""
-    contacts = load_contacts()
+    """Get all contacts with optional filters (per-user)"""
+    contacts = load_contacts(user_id)
 
     if industry:
         contacts = [c for c in contacts if c.get("industry", "").lower() == industry.lower()]
@@ -323,25 +502,32 @@ async def get_contacts(
 
 
 @app.post("/api/contacts")
-async def create_contact(contact: ContactCreate):
-    """Create a new contact"""
-    contacts = load_contacts()
+async def create_contact(
+    contact: ContactCreate,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Create a new contact (per-user)"""
+    contacts = load_contacts(user_id)
 
     new_contact = contact.model_dump()
     new_contact["id"] = str(uuid.uuid4())
+    new_contact["user_id"] = user_id  # Store user_id with contact
     new_contact["created_at"] = datetime.now().isoformat()
     new_contact["updated_at"] = datetime.now().isoformat()
 
     contacts.append(new_contact)
-    save_contacts(contacts)
+    save_contacts(contacts, user_id)
 
     return {"success": True, "contact": new_contact}
 
 
 @app.get("/api/contacts/{contact_id}")
-async def get_contact(contact_id: str):
-    """Get a single contact by ID"""
-    contacts = load_contacts()
+async def get_contact(
+    contact_id: str,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Get a single contact by ID (per-user)"""
+    contacts = load_contacts(user_id)
 
     for contact in contacts:
         if contact.get("id") == contact_id:
@@ -351,39 +537,49 @@ async def get_contact(contact_id: str):
 
 
 @app.put("/api/contacts/{contact_id}")
-async def update_contact(contact_id: str, updates: ContactCreate):
-    """Update a contact"""
-    contacts = load_contacts()
+async def update_contact(
+    contact_id: str,
+    updates: ContactCreate,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Update a contact (per-user)"""
+    contacts = load_contacts(user_id)
 
     for i, contact in enumerate(contacts):
         if contact.get("id") == contact_id:
             updated = {**contact, **updates.model_dump(exclude_unset=True)}
             updated["updated_at"] = datetime.now().isoformat()
             contacts[i] = updated
-            save_contacts(contacts)
+            save_contacts(contacts, user_id)
             return {"success": True, "contact": updated}
 
     raise HTTPException(status_code=404, detail="Contact not found")
 
 
 @app.delete("/api/contacts/{contact_id}")
-async def delete_contact(contact_id: str):
-    """Delete a contact"""
-    contacts = load_contacts()
+async def delete_contact(
+    contact_id: str,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Delete a contact (per-user)"""
+    contacts = load_contacts(user_id)
 
     for i, contact in enumerate(contacts):
         if contact.get("id") == contact_id:
             contacts.pop(i)
-            save_contacts(contacts)
+            save_contacts(contacts, user_id)
             return {"success": True}
 
     raise HTTPException(status_code=404, detail="Contact not found")
 
 
 @app.post("/api/search")
-async def search(request: SearchRequest):
-    """Search contacts"""
-    contacts = load_contacts()
+async def search(
+    request: SearchRequest,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Search contacts (per-user)"""
+    contacts = load_contacts(user_id)
     results = search_contacts(request.query, contacts)
 
     top_score = results[0]["score"] if results else 0
@@ -441,9 +637,12 @@ async def transcribe_audio(audio: UploadFile = File(...)):
 
 
 @app.post("/api/voice-search")
-async def voice_search(request: SearchRequest):
-    """Search contacts using voice query"""
-    contacts = load_contacts()
+async def voice_search(
+    request: SearchRequest,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Search contacts using voice query (per-user)"""
+    contacts = load_contacts(user_id)
     results = search_contacts(request.query, contacts)
 
     # Return contacts from results
@@ -455,6 +654,154 @@ async def voice_search(request: SearchRequest):
         "explanation": f"Found {len(contact_list)} contacts matching '{request.query}'",
         "source": "simple"
     }
+
+
+@app.get("/api/preferences")
+async def get_preferences(user_id: Optional[str] = Depends(get_user_id_from_token)):
+    """Get user preferences"""
+    if not user_id:
+        return {"industry": None, "custom_tags": [], "suggested_tags": []}
+
+    prefs = load_user_preferences(user_id)
+    return prefs
+
+
+@app.put("/api/preferences")
+async def update_preferences(
+    preferences: UserPreferences,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Update user preferences"""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    current_prefs = load_user_preferences(user_id)
+
+    # Update with new values
+    if preferences.industry is not None:
+        current_prefs["industry"] = preferences.industry
+        # Set suggested tags based on industry
+        industry_key = preferences.industry.lower().replace(" ", "_")
+        current_prefs["suggested_tags"] = INDUSTRY_DEFAULT_TAGS.get(
+            industry_key, INDUSTRY_DEFAULT_TAGS.get("general", [])
+        )
+
+    if preferences.custom_tags is not None:
+        current_prefs["custom_tags"] = preferences.custom_tags
+
+    save_user_preferences(user_id, current_prefs)
+    return {"success": True, "preferences": current_prefs}
+
+
+@app.get("/api/tags")
+async def get_all_tags(user_id: Optional[str] = Depends(get_user_id_from_token)):
+    """Get all tags for autocomplete - combines custom, contact-derived, and industry defaults"""
+    all_tags = {}
+
+    # 1. Get industry default tags if user is logged in
+    if user_id:
+        prefs = load_user_preferences(user_id)
+
+        # Add custom tags (highest priority)
+        for tag in prefs.get("custom_tags", []):
+            tag_lower = tag.lower()
+            if tag_lower not in all_tags:
+                all_tags[tag_lower] = {"tag": tag_lower, "count": 0, "source": "custom"}
+
+        # Add suggested/industry tags
+        for tag in prefs.get("suggested_tags", []):
+            tag_lower = tag.lower()
+            if tag_lower not in all_tags:
+                all_tags[tag_lower] = {"tag": tag_lower, "count": 0, "source": "suggested"}
+
+    # 2. Get tags from contacts
+    contacts = load_contacts(user_id)
+    for contact in contacts:
+        if contact.get("tags"):
+            for tag in contact["tags"]:
+                tag_lower = tag.lower()
+                if tag_lower in all_tags:
+                    all_tags[tag_lower]["count"] += 1
+                else:
+                    all_tags[tag_lower] = {"tag": tag_lower, "count": 1, "source": "contact"}
+
+    # 3. Add general default tags if user has no preferences set
+    if user_id:
+        prefs = load_user_preferences(user_id)
+        if not prefs.get("industry") and not prefs.get("suggested_tags"):
+            for tag in INDUSTRY_DEFAULT_TAGS.get("general", []):
+                tag_lower = tag.lower()
+                if tag_lower not in all_tags:
+                    all_tags[tag_lower] = {"tag": tag_lower, "count": 0, "source": "default"}
+
+    # Sort by count (desc) then alphabetically
+    sorted_tags = sorted(
+        all_tags.values(),
+        key=lambda x: (-x["count"], x["tag"])
+    )
+
+    return {"tags": sorted_tags}
+
+
+@app.get("/api/industries")
+async def get_industries():
+    """Get list of available industries for user selection"""
+    industries = [
+        {"id": "real_estate", "name": "Real Estate", "icon": "home"},
+        {"id": "technology", "name": "Technology", "icon": "cpu"},
+        {"id": "finance", "name": "Finance", "icon": "dollar-sign"},
+        {"id": "healthcare", "name": "Healthcare", "icon": "heart"},
+        {"id": "marketing", "name": "Marketing", "icon": "trending-up"},
+        {"id": "legal", "name": "Legal", "icon": "briefcase"},
+        {"id": "consulting", "name": "Consulting", "icon": "users"},
+        {"id": "sales", "name": "Sales", "icon": "shopping-cart"},
+        {"id": "general", "name": "General / Other", "icon": "grid"},
+    ]
+    return {"industries": industries}
+
+
+@app.post("/api/tags")
+async def add_custom_tag(
+    tag: dict,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Add a custom tag to user preferences"""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    tag_name = tag.get("tag", "").strip().lower()
+    if not tag_name:
+        raise HTTPException(status_code=400, detail="Tag name is required")
+
+    prefs = load_user_preferences(user_id)
+    custom_tags = prefs.get("custom_tags", [])
+
+    if tag_name not in [t.lower() for t in custom_tags]:
+        custom_tags.append(tag_name)
+        prefs["custom_tags"] = custom_tags
+        save_user_preferences(user_id, prefs)
+
+    return {"success": True, "custom_tags": custom_tags}
+
+
+@app.delete("/api/tags/{tag_name}")
+async def delete_custom_tag(
+    tag_name: str,
+    user_id: Optional[str] = Depends(get_user_id_from_token)
+):
+    """Remove a custom tag from user preferences"""
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    prefs = load_user_preferences(user_id)
+    custom_tags = prefs.get("custom_tags", [])
+
+    # Remove tag (case-insensitive)
+    custom_tags = [t for t in custom_tags if t.lower() != tag_name.lower()]
+    prefs["custom_tags"] = custom_tags
+    save_user_preferences(user_id, prefs)
+
+    return {"success": True, "custom_tags": custom_tags}
 
 
 if __name__ == "__main__":
