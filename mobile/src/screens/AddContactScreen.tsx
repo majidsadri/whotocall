@@ -420,7 +420,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: colors.cyan[500] }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#22D3EE' }]}>
                 <Icon name="mic" size={18} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -443,7 +443,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color={colors.cyan[400]} />
+                <Icon name="chevron-up" size={18} color="#22D3EE" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -495,7 +495,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: colors.purple[600] }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#67E8F9' }]}>
                 <Icon name="camera" size={16} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -518,7 +518,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color={colors.purple[400]} />
+                <Icon name="chevron-up" size={18} color="#67E8F9" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -564,7 +564,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: colors.green[600] }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#A5B4FC' }]}>
                 <Icon name="clock" size={16} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -587,7 +587,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color={colors.green[400]} />
+                <Icon name="chevron-up" size={18} color="#A5B4FC" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -660,7 +660,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#0A66C2' }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#C084FC' }]}>
                 <Icon name="linkedin" size={14} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -683,7 +683,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color={colors.blue[400]} />
+                <Icon name="chevron-up" size={18} color="#C084FC" />
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -710,7 +710,7 @@ export default function AddContactScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: colors.orange[500] }]}>
+              <View style={[styles.iconBox, { backgroundColor: '#A855F7' }]}>
                 <Icon name="star" size={14} color={colors.white} />
               </View>
               <View style={{ flex: 1 }}>
@@ -733,7 +733,7 @@ export default function AddContactScreen() {
                   },
                 ]}
               >
-                <Icon name="chevron-up" size={18} color={colors.orange[400]} />
+                <Icon name="chevron-up" size={18} color="#A855F7" />
               </Animated.View>
             </View>
           </TouchableOpacity>

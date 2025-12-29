@@ -22,6 +22,17 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>reachr</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>reachr</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
@@ -45,6 +56,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Reachr needs camera access to scan business cards</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Reachr needs your location to record where you met your contacts</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Reachr needs your location to record where you met your contacts</string>
 	<key>NSMicrophoneUsageDescription</key>
@@ -78,24 +91,7 @@
 	<array>
 		<string>arm64</string>
 	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>reachr</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>reachr</string>
-			</array>
-		</dict>
-	</array>
 </dict>
 </plist>
