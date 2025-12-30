@@ -241,16 +241,16 @@ export function BusinessCardPreview({ data, size = 'large' }: BusinessCardPrevie
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 18,
+    padding: 22,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
     elevation: 8,
   },
   cardSmall: {
-    padding: 16,
+    padding: 14,
     borderRadius: 14,
   },
 
@@ -259,14 +259,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   // Modern Template
   cardModern: {
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
     paddingLeft: 0,
   },
@@ -275,27 +275,28 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 6,
+    width: 5,
   },
   modernContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 20,
+    paddingLeft: 18,
   },
   modernLeft: {
-    marginRight: 16,
+    marginRight: 14,
   },
   modernRight: {
     flex: 1,
   },
   modernContactRow: {
-    marginTop: 8,
+    marginTop: 10,
   },
   modernContactText: {
-    fontSize: 12,
-    fontFamily: 'Menlo',
+    fontSize: 13,
+    fontWeight: '500',
     color: colors.gray[400],
-    marginBottom: 2,
+    marginBottom: 3,
+    letterSpacing: -0.2,
   },
 
   // Gradient Template - Premium
@@ -410,12 +411,14 @@ const styles = StyleSheet.create({
   avatarInitials: {
     color: colors.white,
     fontWeight: '700',
+    letterSpacing: 0.5,
   },
   name: {
     fontSize: 22,
     fontWeight: '700',
     color: colors.text,
-    marginTop: 12,
+    marginTop: 14,
+    letterSpacing: -0.4,
   },
   nameSmall: {
     fontSize: 16,
@@ -430,6 +433,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.purple[400],
     marginTop: 4,
+    letterSpacing: -0.2,
   },
   titleSmall: {
     fontSize: 12,
@@ -437,14 +441,16 @@ const styles = StyleSheet.create({
   },
   company: {
     fontSize: 14,
+    fontWeight: '400',
     color: colors.gray[400],
-    marginTop: 2,
+    marginTop: 3,
+    letterSpacing: -0.2,
   },
   companySmall: {
     fontSize: 11,
   },
   contactRow: {
-    marginTop: 20,
+    marginTop: 18,
     gap: 8,
   },
   contactItem: {
@@ -453,7 +459,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   contactText: {
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: '400',
     color: colors.gray[400],
+    letterSpacing: -0.2,
   },
 });

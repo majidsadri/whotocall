@@ -73,3 +73,9 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Secrets
+secrets.local.ts
+src/services/secrets.local.ts
+.env
+.env.local

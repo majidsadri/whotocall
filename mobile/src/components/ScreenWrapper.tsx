@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from './AppHeader';
 import LoginModal from './LoginModal';
 import ProfileModal from './ProfileModal';
+import { useLoginModal } from '../context/LoginModalContext';
 import { colors } from '../styles/colors';
 
 interface ScreenWrapperProps {
@@ -11,20 +12,20 @@ interface ScreenWrapperProps {
 }
 
 export default function ScreenWrapper({ children }: ScreenWrapperProps) {
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { isLoginModalVisible, openLoginModal, closeLoginModal } = useLoginModal();
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <AppHeader
-        onLoginPress={() => setShowLoginModal(true)}
+        onLoginPress={openLoginModal}
         onProfilePress={() => setShowProfileModal(true)}
       />
       <View style={styles.content}>{children}</View>
 
       <LoginModal
-        visible={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
+        visible={isLoginModalVisible}
+        onClose={closeLoginModal}
       />
       <ProfileModal
         visible={showProfileModal}

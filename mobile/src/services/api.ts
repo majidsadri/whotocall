@@ -1,6 +1,7 @@
 import { Contact, ExtractedTags, SearchResult, BusinessCard, BusinessCardInput } from '../types';
 import { supabase } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNFS from 'react-native-fs';
 
 const BUSINESS_CARD_STORAGE_KEY = '@business_card';
 
@@ -154,12 +155,14 @@ export async function extractCardText(imageUri: string): Promise<{ text: string 
 export async function transcribeAudio(audioUri: string): Promise<{ text: string; success: boolean }> {
   const formData = new FormData();
 
-  const filename = audioUri.split('/').pop() || 'recording.m4a';
+  const filename = audioUri.split('/').pop() || 'recording.mp4';
+  const ext = filename.split('.').pop()?.toLowerCase() || 'mp4';
+  const mimeType = ext === 'aac' ? 'audio/aac' : ext === 'm4a' ? 'audio/m4a' : 'audio/mp4';
 
   formData.append('audio', {
     uri: audioUri,
     name: filename,
-    type: 'audio/m4a',
+    type: mimeType,
   } as any);
 
   return apiFormRequest('/api/transcribe', formData);
@@ -433,4 +436,307 @@ function generateLocalVCard(card: BusinessCard): string {
 
 export function getShareUrl(shareSlug: string): string {
   return `${BASE_URL}/card/${shareSlug}`;
+}
+
+// ============================================
+// Multi-Card Business Card APIs
+// ============================================
+
+export interface MultiCardBusinessCard extends BusinessCard {
+  card_type: 'digital' | 'scanned';
+  is_primary: boolean;
+  display_order: number;
+  scanned_image_url?: string;
+  card_label?: string;
+}
+
+// Get all business cards for the current user
+export async function getBusinessCards(): Promise<{ cards: MultiCardBusinessCard[] }> {
+  try {
+    return await apiRequest('/api/business-cards');
+  } catch (error) {
+    console.log('Multi-card API unavailable');
+    return { cards: [] };
+  }
+}
+
+// Create a new business card
+export async function createBusinessCard(card: Partial<MultiCardBusinessCard>): Promise<{
+  success: boolean;
+  card: MultiCardBusinessCard;
+}> {
+  try {
+    return await apiRequest('/api/business-cards', {
+      method: 'POST',
+      body: JSON.stringify(card),
+    });
+  } catch (error) {
+    console.log('Create card API unavailable, saving locally only');
+    throw error;
+  }
+}
+
+// Update an existing business card
+export async function updateBusinessCard(
+  cardId: string,
+  updates: Partial<MultiCardBusinessCard>
+): Promise<{
+  success: boolean;
+  card: MultiCardBusinessCard;
+}> {
+  try {
+    return await apiRequest(`/api/business-cards/${cardId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  } catch (error) {
+    console.log('Update card API unavailable');
+    throw error;
+  }
+}
+
+// Delete a business card
+export async function deleteBusinessCard(cardId: string): Promise<{ success: boolean }> {
+  try {
+    return await apiRequest(`/api/business-cards/${cardId}`, {
+      method: 'DELETE',
+    });
+  } catch (error) {
+    console.log('Delete card API unavailable');
+    throw error;
+  }
+}
+
+// Set a card as primary
+export async function setPrimaryBusinessCard(cardId: string): Promise<{
+  success: boolean;
+  card: MultiCardBusinessCard;
+}> {
+  try {
+    return await apiRequest(`/api/business-cards/${cardId}/primary`, {
+      method: 'POST',
+    });
+  } catch (error) {
+    console.log('Set primary API unavailable');
+    throw error;
+  }
+}
+
+// Upload scanned card image to Supabase storage
+export async function uploadScannedCardImage(imageUri: string): Promise<{
+  success: boolean;
+  image_url: string;
+  enhanced_url?: string;
+}> {
+  try {
+    // Get current user for folder path
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('No user logged in, using local image');
+      return { success: true, image_url: imageUri };
+    }
+
+    // Read file as base64
+    const base64Data = await RNFS.readFile(imageUri, 'base64');
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const filename = `scanned_cards/${user.id}/${timestamp}.jpg`;
+
+    // Upload to Supabase storage
+    const { data, error } = await supabase.storage
+      .from('business-cards')
+      .upload(filename, decode(base64Data), {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+    if (error) {
+      console.error('Supabase upload error:', error);
+      return { success: true, image_url: imageUri };
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('business-cards')
+      .getPublicUrl(filename);
+
+    if (urlData?.publicUrl) {
+      return { success: true, image_url: urlData.publicUrl };
+    }
+
+    return { success: true, image_url: imageUri };
+  } catch (error) {
+    console.error('Upload scanned card error:', error);
+    return { success: true, image_url: imageUri };
+  }
+}
+
+// Helper function to decode base64
+function decode(base64: string): Uint8Array {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// Process and straighten a business card image
+export async function processCardImage(imageUri: string): Promise<{
+  success: boolean;
+  processed_url: string;
+  original_url: string;
+}> {
+  try {
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() || 'card_image.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+    formData.append('image', {
+      uri: imageUri,
+      name: filename,
+      type,
+    } as any);
+
+    // Request perspective correction and enhancement
+    formData.append('operations', JSON.stringify({
+      straighten: true,
+      enhance_contrast: true,
+      remove_background: false,
+    }));
+
+    return await apiFormRequest('/api/process-card-image', formData);
+  } catch (error) {
+    console.log('Image processing API unavailable');
+    return { success: false, processed_url: imageUri, original_url: imageUri };
+  }
+}
+
+// Sync all local cards to backend (batch operation)
+export async function syncBusinessCards(cards: MultiCardBusinessCard[]): Promise<{
+  success: boolean;
+  synced: number;
+}> {
+  try {
+    // Try backend API first
+    return await apiRequest('/api/business-cards/sync', {
+      method: 'POST',
+      body: JSON.stringify({ cards }),
+    });
+  } catch (error) {
+    // Fallback: sync directly to Supabase
+    try {
+      return await syncCardsToSupabase(cards);
+    } catch (supaErr) {
+      console.log('Sync cards unavailable');
+      return { success: false, synced: 0 };
+    }
+  }
+}
+
+// Direct Supabase sync for business cards
+async function syncCardsToSupabase(cards: MultiCardBusinessCard[]): Promise<{
+  success: boolean;
+  synced: number;
+}> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('Supabase sync: No user logged in');
+      return { success: false, synced: 0 };
+    }
+
+    console.log(`Supabase sync: Syncing ${cards.length} cards for user ${user.id}`);
+    let synced = 0;
+
+    for (const card of cards) {
+      try {
+        const cardData = {
+          id: card.id,
+          user_id: user.id,
+          card_type: card.card_type || 'digital',
+          is_primary: card.is_primary ?? false,
+          display_order: card.display_order ?? 0,
+          full_name: card.full_name || '',
+          email: card.email || '',
+          phone: card.phone || '',
+          title: card.title || '',
+          company: card.company || '',
+          website: card.website || '',
+          linkedin_url: card.linkedin_url || '',
+          avatar_url: card.avatar_url || '',
+          template_id: card.template_id || 'classic',
+          accent_color: card.accent_color || '#3B82F6',
+          share_slug: card.share_slug || '',
+          scanned_image_url: card.scanned_image_url || null,
+          card_label: card.card_label || null,
+          created_at: card.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        console.log(`Supabase sync: Upserting card ${card.id}`);
+        const { data, error } = await supabase
+          .from('user_business_cards')
+          .upsert(cardData, {
+            onConflict: 'id',
+          })
+          .select();
+
+        if (error) {
+          console.error(`Supabase sync error for card ${card.id}:`, error.message, error.code);
+          if (error.code === 'PGRST205' || error.message?.includes('not find the table')) {
+            console.log('Supabase table not configured, cards saved locally');
+            return { success: false, synced: 0 };
+          }
+        } else {
+          console.log(`Supabase sync: Card ${card.id} synced successfully`);
+          synced++;
+        }
+      } catch (err: any) {
+        console.error(`Supabase sync exception for card ${card.id}:`, err?.message || err);
+      }
+    }
+
+    console.log(`Supabase sync: ${synced}/${cards.length} cards synced`);
+    return { success: synced > 0, synced };
+  } catch (err: any) {
+    console.error('Supabase sync failed:', err?.message || err);
+    return { success: false, synced: 0 };
+  }
+}
+
+// Get all business cards from Supabase
+export async function getCardsFromSupabase(): Promise<MultiCardBusinessCard[]> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('Supabase fetch: No user logged in');
+      return [];
+    }
+
+    console.log(`Supabase fetch: Getting cards for user ${user.id}`);
+    const { data, error } = await supabase
+      .from('user_business_cards')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.error('Supabase fetch error:', error.message, error.code);
+      // Table might not exist yet - this is fine, use local storage
+      if (error.code === 'PGRST205' || error.message?.includes('not find the table')) {
+        console.log('Supabase table not configured yet, using local storage');
+        return [];
+      }
+      return [];
+    }
+
+    console.log(`Supabase fetch: Found ${data?.length || 0} cards`);
+    return (data || []) as MultiCardBusinessCard[];
+  } catch (err: any) {
+    console.error('Supabase fetch exception:', err?.message || err);
+    return [];
+  }
 }

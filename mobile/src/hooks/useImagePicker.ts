@@ -65,7 +65,7 @@ export function useImagePicker(): UseImagePickerReturn {
     return null;
   };
 
-  const pickFromCamera = useCallback(async (): Promise<string | null> => {
+  const pickFromCamera = useCallback(async (withCropping: boolean = false): Promise<string | null> => {
     setIsLoading(true);
     setError(null);
 
@@ -79,10 +79,12 @@ export function useImagePicker(): UseImagePickerReturn {
 
       const options: CameraOptions = {
         mediaType: 'photo',
-        quality: 0.8,
-        maxWidth: 1920,
-        maxHeight: 1920,
+        quality: 0.9,
+        maxWidth: 2400,
+        maxHeight: 2400,
         saveToPhotos: false,
+        includeBase64: false,
+        cameraType: 'back',
       };
 
       const response = await launchCamera(options);
@@ -103,9 +105,9 @@ export function useImagePicker(): UseImagePickerReturn {
     try {
       const options: ImageLibraryOptions = {
         mediaType: 'photo',
-        quality: 0.8,
-        maxWidth: 1920,
-        maxHeight: 1920,
+        quality: 0.9,
+        maxWidth: 2400,
+        maxHeight: 2400,
         selectionLimit: 1,
       };
 

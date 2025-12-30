@@ -3,3 +3,8 @@ export { CardEditForm } from './CardEditForm';
 export { TemplateSelector } from './TemplateSelector';
 export { ShareModal } from './ShareModal';
 export { QRCodeDisplay } from './QRCodeDisplay';
+export { CardCarousel } from './CardCarousel';
+export { ScannedCardPreview } from './ScannedCardPreview';
+export { AddCardModal } from './AddCardModal';
+export { PrimaryIndicator } from './PrimaryIndicator';
+export { CardScanner } from './CardScanner';

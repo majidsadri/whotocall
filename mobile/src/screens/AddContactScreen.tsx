@@ -61,23 +61,56 @@ export default function AddContactScreen() {
   useEffect(() => {
     const params = route.params;
     if (params?.name) {
-      // Pre-fill data from shared business card
-      const prefillData: ExtractedTags = {
+      // Build context from shared card data
+      const contextParts = [`Received shared business card from ${params.name}.`];
+      if (params.title) contextParts.push(`Title: ${params.title}.`);
+      if (params.company) contextParts.push(`Company: ${params.company}.`);
+      if (params.email) contextParts.push(`Email: ${params.email}.`);
+      if (params.linkedin) contextParts.push(`LinkedIn profile available.`);
+      contextParts.push('This is a shared contact from Reachr app.');
+      const context = contextParts.join(' ');
+
+      setTranscript(context);
+      if (params.linkedin) {
+        setLinkedinUrl(params.linkedin);
+      }
+
+      // Set initial data and go to review
+      const initialData: ExtractedTags = {
         name: params.name,
         email: params.email || undefined,
         phone: params.phone || undefined,
         role: params.title || undefined,
         company: params.company || undefined,
-        tags: ['shared contact', 'reachr'],
+        tags: ['shared contact'],
       };
-      setExtractedData(prefillData);
-      if (params.linkedin) {
-        setLinkedinUrl(params.linkedin);
-      }
-      // Generate a context note
-      setTranscript(`Contact shared via Reachr business card. ${params.name}${params.title ? `, ${params.title}` : ''}${params.company ? ` at ${params.company}` : ''}.`);
-      // Go directly to review step
+      setExtractedData(initialData);
       setStep('review');
+
+      // Call AI to extract proper tags in background
+      const extractProperTags = async () => {
+        try {
+          setIsProcessing(true);
+          const aiData = await api.extractTags(context);
+          // Merge AI tags with shared contact tag
+          const mergedData: ExtractedTags = {
+            name: params.name,
+            email: params.email || aiData.email || undefined,
+            phone: params.phone || aiData.phone || undefined,
+            role: params.title || aiData.role || undefined,
+            company: params.company || aiData.company || undefined,
+            industry: aiData.industry || undefined,
+            location: aiData.location || undefined,
+            tags: [...new Set(['shared contact', ...(aiData.tags || [])])],
+          };
+          setExtractedData(mergedData);
+        } catch (err) {
+          console.log('Tag extraction failed, using basic tags');
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+      extractProperTags();
     }
   }, [route.params]);
 
@@ -123,6 +156,7 @@ export default function AddContactScreen() {
     startRecording,
     stopRecording,
     error: audioError,
+    duration: recordingDuration,
   } = useAudioRecorder();
 
   const {
@@ -489,7 +523,7 @@ export default function AddContactScreen() {
                     {isTranscribing
                       ? 'Transcribing...'
                       : isRecording
-                      ? 'Recording...'
+                      ? `Recording ${recordingDuration}`
                       : 'Tap to record'}
                   </Text>
                   <Text style={styles.recordingSubtitle}>
@@ -812,20 +846,21 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   titleSection: {
-    paddingTop: 4,
-    paddingBottom: 20,
+    paddingTop: 8,
+    paddingBottom: 24,
   },
   pageTitle: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
   },
   pageSubtitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.gray[500],
-    marginTop: 4,
+    fontSize: 15,
+    fontWeight: '400',
+    color: colors.gray[400],
+    marginTop: 6,
+    letterSpacing: -0.2,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -834,106 +869,109 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   reviewHeaderTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '600',
     color: colors.text,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
   },
   iconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   chevronContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
   },
   recordingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 14,
+    paddingVertical: 4,
   },
   recordingInfo: {
     flex: 1,
   },
   recordingTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: colors.text,
+    letterSpacing: -0.3,
   },
   recordingSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: '400',
     color: colors.gray[500],
-    marginTop: 4,
+    marginTop: 3,
+    letterSpacing: -0.1,
   },
   recordingDone: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.4)',
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   recordingDoneText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#A78BFA',
+    color: colors.purple[400],
   },
   uploadButton: {
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: colors.purple[500],
-    borderRadius: 16,
-    paddingVertical: 40,
+    borderColor: colors.purple[600],
+    borderRadius: 14,
+    paddingVertical: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.purple[900] + '30',
+    backgroundColor: 'rgba(124, 58, 237, 0.08)',
   },
   uploadText: {
-    fontSize: 15,
+    fontSize: 16,
     color: colors.purple[300],
-    marginTop: 12,
+    marginTop: 14,
     fontWeight: '600',
+    letterSpacing: -0.2,
   },
   uploadIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     backgroundColor: colors.purple[600],
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: colors.purple[500],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
     elevation: 4,
   },
   uploadHint: {
     fontSize: 13,
+    fontWeight: '400',
     color: colors.gray[500],
-    marginTop: 4,
+    marginTop: 6,
+    letterSpacing: -0.1,
   },
   imagePreview: {
     borderRadius: 16,
@@ -993,76 +1031,78 @@ const styles = StyleSheet.create({
   dateTimeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
+    height: 52,
     paddingHorizontal: 16,
-    backgroundColor: colors.gray[800],
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1.5,
-    borderColor: colors.gray[700],
+    borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: 14,
     gap: 12,
   },
   dateTimeText: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.text,
     fontWeight: '500',
+    letterSpacing: -0.2,
   },
   priorityBadge: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
+    letterSpacing: -0.2,
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: colors.primary,
-    paddingVertical: 18,
-    borderRadius: 16,
-    marginTop: 24,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
+    backgroundColor: colors.purple[600],
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginTop: 20,
+    shadowColor: colors.purple[600],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
     elevation: 6,
   },
   submitButtonText: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.white,
-    letterSpacing: 0.3,
+    letterSpacing: -0.2,
   },
   // Review screen styles
   previewCard: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: 18,
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: 16,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 4,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   previewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: colors.primary,
-    gap: 16,
+    padding: 18,
+    backgroundColor: colors.purple[600],
+    gap: 14,
   },
   previewAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   previewAvatarText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: colors.white,
   },
@@ -1071,62 +1111,69 @@ const styles = StyleSheet.create({
   },
   previewName: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.white,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   previewRole: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: 4,
+    fontWeight: '400',
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 3,
+    letterSpacing: -0.2,
   },
   previewDetails: {
-    padding: 20,
-    gap: 12,
+    padding: 18,
+    gap: 10,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   detailText: {
     fontSize: 15,
-    color: colors.textSecondary,
+    fontWeight: '400',
+    color: colors.gray[400],
+    letterSpacing: -0.2,
   },
   priorityReview: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 18,
+    paddingBottom: 18,
   },
   priorityHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   priorityLabel: {
     fontSize: 13,
     color: colors.gray[500],
     fontWeight: '500',
+    letterSpacing: -0.1,
   },
   priorityValue: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
+    letterSpacing: -0.1,
   },
   priorityTrack: {
-    height: 10,
+    height: 8,
     backgroundColor: colors.gray[800],
-    borderRadius: 5,
+    borderRadius: 4,
     overflow: 'hidden',
   },
   priorityFill: {
     height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 5,
+    backgroundColor: colors.purple[500],
+    borderRadius: 4,
   },
   tagCount: {
-    fontSize: 12,
-    color: '#A78BFA',
+    fontSize: 13,
+    color: colors.purple[400],
     fontWeight: '500',
     marginLeft: 8,
+    letterSpacing: -0.1,
   },
   tagsGrid: {
     flexDirection: 'row',
@@ -1134,10 +1181,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   notesText: {
-    fontSize: 14,
-    color: colors.gray[600],
+    fontSize: 15,
+    color: colors.gray[500],
     fontStyle: 'italic',
-    lineHeight: 20,
+    lineHeight: 22,
+    letterSpacing: -0.2,
   },
   reviewActions: {
     flexDirection: 'row',
@@ -1153,57 +1201,59 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   successIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: colors.purple[600],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 28,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 10,
+    marginBottom: 24,
+    shadowColor: colors.purple[600],
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
   },
   successTitle: {
     fontSize: 28,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 12,
-    letterSpacing: -0.5,
+    marginBottom: 10,
+    letterSpacing: -0.6,
   },
   successSubtitle: {
     fontSize: 16,
-    color: colors.textSecondary,
+    fontWeight: '400',
+    color: colors.gray[400],
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 36,
     lineHeight: 24,
+    letterSpacing: -0.2,
   },
   successHighlight: {
-    fontWeight: '700',
-    color: '#A78BFA',
+    fontWeight: '600',
+    color: colors.purple[400],
   },
   successButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.purple[600],
     paddingHorizontal: 28,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 14,
     width: '100%',
     justifyContent: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: colors.purple[600],
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowRadius: 10,
     elevation: 6,
   },
   successButtonText: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.white,
-    letterSpacing: 0.3,
+    letterSpacing: -0.2,
   },
 });

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Alert } from 'react-native';
 import { Session, User } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { setupDeepLinkHandler } from '../lib/deepLinking';
 
@@ -61,7 +63,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      // Clear local business cards data first
+      await AsyncStorage.removeItem('@business_cards_v2');
+      await AsyncStorage.removeItem('@business_card');
+
+      // Try to sign out from Supabase (may fail if offline)
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (networkErr) {
+        console.log('Network sign out failed, signing out locally');
+      }
+
+      // Always clear local state regardless of network
+      setUser(null);
+      setSession(null);
+    } catch (err) {
+      console.error('Sign out exception:', err);
+      // Still clear state even if storage clear fails
+      setUser(null);
+      setSession(null);
+    }
   };
 
   return (

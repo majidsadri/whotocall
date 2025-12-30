@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
@@ -16,33 +17,87 @@ import {
   CardEditForm,
   TemplateSelector,
   ShareModal,
+  CardCarousel,
+  AddCardModal,
+  CardScanner,
+  ScannedCardPreview,
 } from '../components/businessCard';
-import { useBusinessCard } from '../hooks/useBusinessCard';
+import { useBusinessCards } from '../hooks/useBusinessCards';
 import { useImagePicker } from '../hooks/useImagePicker';
 import { useAuth } from '../context/AuthContext';
-import { TemplateId } from '../types/businessCard';
+import { useLoginModal } from '../context/LoginModalContext';
+import { TemplateId, BusinessCardInput } from '../types/businessCard';
 import { colors } from '../styles/colors';
 import { commonStyles } from '../styles/common';
 
 export default function MeScreen() {
   const { user } = useAuth();
+  const { openLoginModal } = useLoginModal();
   const {
-    card,
+    cards,
+    selectedCard,
+    selectedCardIndex,
     isLoading,
     isSaving,
     error,
-    hasChanges,
-    formData,
-    updateField,
-    saveCard,
-    uploadAvatar,
-    generateVCard,
+    selectCardByIndex,
+    createDigitalCard,
+    createScannedCard,
+    updateCard,
+    deleteCard,
+    setPrimaryCard,
     getCardShareUrl,
-  } = useBusinessCard();
+    generateVCard,
+    uploadAvatar,
+    refreshCards,
+  } = useBusinessCards();
 
-  const { showPicker, pickFromGallery, pickFromCamera } = useImagePicker();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Pull-to-refresh handler
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshCards();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshCards]);
+
+  const { pickFromGallery, pickFromCamera } = useImagePicker();
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState<BusinessCardInput | null>(null);
+
+  // Start editing current card
+  const handleStartEdit = useCallback(() => {
+    if (selectedCard && selectedCard.card_type === 'digital') {
+      setEditFormData({
+        full_name: selectedCard.full_name,
+        email: selectedCard.email || '',
+        phone: selectedCard.phone || '',
+        title: selectedCard.title || '',
+        company: selectedCard.company || '',
+        website: selectedCard.website || '',
+        linkedin_url: selectedCard.linkedin_url || '',
+        avatar_url: selectedCard.avatar_url || '',
+        template_id: selectedCard.template_id,
+        accent_color: selectedCard.accent_color,
+      });
+      setIsEditMode(true);
+    }
+  }, [selectedCard]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditMode(false);
+    setEditFormData(null);
+  }, []);
+
+  const updateEditField = useCallback((field: keyof BusinessCardInput, value: string) => {
+    setEditFormData(prev => prev ? { ...prev, [field]: value } : null);
+  }, []);
 
   const handlePickImage = useCallback(() => {
     Alert.alert(
@@ -56,7 +111,7 @@ export default function MeScreen() {
             if (uri) {
               const avatarUrl = await uploadAvatar(uri);
               if (avatarUrl) {
-                updateField('avatar_url', avatarUrl);
+                updateEditField('avatar_url', avatarUrl);
               }
             }
           },
@@ -68,7 +123,7 @@ export default function MeScreen() {
             if (uri) {
               const avatarUrl = await uploadAvatar(uri);
               if (avatarUrl) {
-                updateField('avatar_url', avatarUrl);
+                updateEditField('avatar_url', avatarUrl);
               }
             }
           },
@@ -77,39 +132,134 @@ export default function MeScreen() {
       ],
       { cancelable: true }
     );
-  }, [pickFromCamera, pickFromGallery, uploadAvatar, updateField]);
+  }, [pickFromCamera, pickFromGallery, uploadAvatar, updateEditField]);
 
   const handleSave = useCallback(async () => {
-    const success = await saveCard();
+    if (!selectedCard || !editFormData) return;
+
+    const success = await updateCard(selectedCard.id, editFormData);
     if (success) {
       setIsEditMode(false);
+      setEditFormData(null);
       Alert.alert('Success', 'Your business card has been saved!');
     }
-  }, [saveCard]);
+  }, [selectedCard, editFormData, updateCard]);
 
   const handleShare = useCallback(() => {
-    if (!formData.full_name.trim()) {
-      Alert.alert('Add Name', 'Please add your name before sharing.');
+    if (!selectedCard?.full_name?.trim()) {
+      Alert.alert('Add Name', 'Please add a name before sharing.');
       return;
     }
     setShowShareModal(true);
-  }, [formData.full_name]);
+  }, [selectedCard]);
 
   const handleExportVCard = useCallback(async () => {
     try {
-      const vcard = await generateVCard();
+      const vcard = await generateVCard(selectedCard?.id);
       if (vcard) {
-        // For now, just show the vCard content - in production, would share as file
         Alert.alert('vCard Generated', 'Your vCard is ready to share.');
       }
     } catch (err) {
       Alert.alert('Error', 'Could not generate vCard');
     }
-  }, [generateVCard]);
+  }, [generateVCard, selectedCard]);
 
   const handleTemplateChange = useCallback((templateId: TemplateId) => {
-    updateField('template_id', templateId);
-  }, [updateField]);
+    updateEditField('template_id', templateId);
+  }, [updateEditField]);
+
+  const handleAddCard = useCallback(() => {
+    setShowAddModal(true);
+  }, []);
+
+  const handleCreateDigital = useCallback(async () => {
+    // Create a new blank digital card
+    const newCard = await createDigitalCard({
+      full_name: user?.user_metadata?.full_name || user?.user_metadata?.name || 'New Card',
+      email: user?.email || '',
+      phone: '',
+      title: '',
+      company: '',
+      website: '',
+      linkedin_url: '',
+      avatar_url: user?.user_metadata?.avatar_url || '',
+      template_id: 'gradient',
+    });
+
+    if (newCard) {
+      // Start editing the new card
+      setEditFormData({
+        full_name: newCard.full_name,
+        email: newCard.email || '',
+        phone: newCard.phone || '',
+        title: newCard.title || '',
+        company: newCard.company || '',
+        website: newCard.website || '',
+        linkedin_url: newCard.linkedin_url || '',
+        avatar_url: newCard.avatar_url || '',
+        template_id: newCard.template_id,
+        accent_color: newCard.accent_color,
+      });
+      setIsEditMode(true);
+    }
+  }, [createDigitalCard, user]);
+
+  const handleScanCard = useCallback(() => {
+    setShowScanner(true);
+  }, []);
+
+  const handleSaveScannedCard = useCallback(async (imageUrl: string, label: string) => {
+    await createScannedCard({
+      card_label: label,
+      scanned_image_url: imageUrl,
+    });
+  }, [createScannedCard]);
+
+  const handleSetPrimary = useCallback(async () => {
+    if (!selectedCard || selectedCard.is_primary) return;
+
+    Alert.alert(
+      'Set as Primary',
+      'Make this your primary card? It will be used for quick sharing.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Set Primary',
+          onPress: async () => {
+            const success = await setPrimaryCard(selectedCard.id);
+            if (success) {
+              Alert.alert('Success', 'Primary card updated!');
+            }
+          },
+        },
+      ]
+    );
+  }, [selectedCard, setPrimaryCard]);
+
+  const handleDeleteCard = useCallback(async () => {
+    if (!selectedCard) return;
+
+    const cardName = selectedCard.card_label || selectedCard.full_name || 'this card';
+
+    Alert.alert(
+      'Delete Card',
+      `Are you sure you want to delete "${cardName}"? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await deleteCard(selectedCard.id);
+            if (success) {
+              setIsEditMode(false);
+              setEditFormData(null);
+            }
+          },
+        },
+      ]
+    );
+  }, [selectedCard, deleteCard]);
 
   // Loading state
   if (isLoading) {
@@ -117,7 +267,7 @@ export default function MeScreen() {
       <ScreenWrapper>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.purple[500]} />
-          <Text style={styles.loadingText}>Loading your card...</Text>
+          <Text style={styles.loadingText}>Loading your cards...</Text>
         </View>
       </ScreenWrapper>
     );
@@ -131,16 +281,37 @@ export default function MeScreen() {
           <View style={styles.emptyIconContainer}>
             <Icon name="user" size={48} color={colors.gray[500]} />
           </View>
-          <Text style={styles.emptyTitle}>Sign in to create your card</Text>
+          <Text style={styles.emptyTitle}>Sign in to create your cards</Text>
           <Text style={styles.emptySubtitle}>
-            Connect with LinkedIn to create and share your digital business card
+            Connect with LinkedIn to create and share your digital business cards
           </Text>
+          <TouchableOpacity style={styles.signInButton} onPress={openLoginModal}>
+            <Icon name="log-in" size={20} color={colors.white} />
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          </TouchableOpacity>
         </View>
       </ScreenWrapper>
     );
   }
 
-  const shareUrl = getCardShareUrl();
+  const shareUrl = getCardShareUrl(selectedCard?.id);
+  const isScannedCard = selectedCard?.card_type === 'scanned';
+  const formData = editFormData || (selectedCard ? {
+    full_name: selectedCard.full_name,
+    email: selectedCard.email || '',
+    phone: selectedCard.phone || '',
+    title: selectedCard.title || '',
+    company: selectedCard.company || '',
+    website: selectedCard.website || '',
+    linkedin_url: selectedCard.linkedin_url || '',
+    avatar_url: selectedCard.avatar_url || '',
+    template_id: selectedCard.template_id,
+    accent_color: selectedCard.accent_color,
+  } : {
+    full_name: '',
+    email: '',
+    template_id: 'gradient' as TemplateId,
+  });
 
   return (
     <ScreenWrapper>
@@ -148,47 +319,106 @@ export default function MeScreen() {
         style={commonStyles.container}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.purple[500]}
+            colors={[colors.purple[500]]}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.pageTitle}>My Card</Text>
-          <Text style={styles.pageSubtitle}>Your digital business card</Text>
+          <Text style={styles.pageTitle}>My Cards</Text>
+          <Text style={styles.pageSubtitle}>
+            {cards.length === 0
+              ? 'Create your first business card'
+              : `${cards.length} card${cards.length !== 1 ? 's' : ''}`}
+          </Text>
         </View>
 
-        {/* Card Preview */}
-        <View style={styles.previewSection}>
-          <BusinessCardPreview data={formData} size="large" />
-        </View>
+        {/* Card Carousel */}
+        <CardCarousel
+          cards={cards}
+          selectedIndex={selectedCardIndex}
+          onSelectIndex={selectCardByIndex}
+          onAddCard={handleAddCard}
+        />
+
+        {/* Selected Card Info */}
+        {selectedCard && (
+          <View style={styles.cardInfoSection}>
+            <View style={styles.cardInfoHeader}>
+              <Text style={styles.cardInfoName} numberOfLines={1}>
+                {selectedCard.card_label || selectedCard.full_name || 'Untitled Card'}
+              </Text>
+              {selectedCard.is_primary && (
+                <View style={styles.primaryTag}>
+                  <Icon name="star" size={12} color={colors.yellow[400]} />
+                  <Text style={styles.primaryTagText}>Primary</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.cardInfoType}>
+              {isScannedCard ? 'Scanned Card' : 'Digital Card'}
+            </Text>
+          </View>
+        )}
 
         {/* Action Buttons */}
-        <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.editButton]}
-            onPress={() => setIsEditMode(!isEditMode)}
-          >
-            <Icon name={isEditMode ? 'x' : 'edit-2'} size={18} color={colors.white} />
-            <Text style={styles.actionButtonText}>
-              {isEditMode ? 'Cancel' : 'Edit'}
-            </Text>
-          </TouchableOpacity>
+        {selectedCard && !isEditMode && (
+          <View style={styles.actionRow}>
+            {!isScannedCard && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.editButton]}
+                onPress={handleStartEdit}
+              >
+                <Icon name="edit-2" size={18} color={colors.white} />
+                <Text style={styles.actionButtonText}>Edit</Text>
+              </TouchableOpacity>
+            )}
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.shareButton]}
-            onPress={handleShare}
-            disabled={!formData.full_name.trim()}
-          >
-            <Icon name="share-2" size={18} color={colors.white} />
-            <Text style={styles.actionButtonText}>Share</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.shareButton]}
+              onPress={handleShare}
+            >
+              <Icon name="share-2" size={18} color={colors.white} />
+              <Text style={styles.actionButtonText}>Share</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-        {/* Edit Mode */}
-        {isEditMode && (
+        {/* More Actions */}
+        {selectedCard && !isEditMode && (
+          <View style={styles.moreActionsRow}>
+            {!selectedCard.is_primary && (
+              <TouchableOpacity
+                style={styles.moreActionButton}
+                onPress={handleSetPrimary}
+              >
+                <Icon name="star" size={16} color={colors.gray[400]} />
+                <Text style={styles.moreActionText}>Set Primary</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.moreActionButton}
+              onPress={handleDeleteCard}
+            >
+              <Icon name="trash-2" size={16} color={colors.red[400]} />
+              <Text style={[styles.moreActionText, styles.deleteText]}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Edit Mode for Digital Cards */}
+        {isEditMode && !isScannedCard && editFormData && (
           <View style={commonStyles.card}>
             <View style={commonStyles.cardContent}>
               {/* Template Selector */}
               <TemplateSelector
-                selectedTemplate={formData.template_id || 'classic'}
+                selectedTemplate={editFormData.template_id || 'gradient'}
                 onSelectTemplate={handleTemplateChange}
               />
 
@@ -196,8 +426,8 @@ export default function MeScreen() {
 
               {/* Edit Form */}
               <CardEditForm
-                data={formData}
-                onUpdateField={updateField}
+                data={editFormData}
+                onUpdateField={updateEditField}
                 onPickImage={handlePickImage}
               />
 
@@ -209,39 +439,47 @@ export default function MeScreen() {
                 </View>
               )}
 
-              {/* Save Button */}
-              <TouchableOpacity
-                style={[
-                  commonStyles.btnPrimary,
-                  styles.saveButton,
-                  (!hasChanges || isSaving) && styles.saveButtonDisabled,
-                ]}
-                onPress={handleSave}
-                disabled={!hasChanges || isSaving}
-              >
-                {isSaving ? (
-                  <ActivityIndicator color={colors.white} size="small" />
-                ) : (
-                  <>
-                    <Icon name="check" size={18} color={colors.white} />
-                    <Text style={commonStyles.btnPrimaryText}>Save Changes</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              {/* Save/Cancel Buttons */}
+              <View style={styles.editButtonsRow}>
+                <TouchableOpacity
+                  style={styles.cancelEditButton}
+                  onPress={handleCancelEdit}
+                >
+                  <Text style={styles.cancelEditText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    commonStyles.btnPrimary,
+                    styles.saveButton,
+                    isSaving && styles.saveButtonDisabled,
+                  ]}
+                  onPress={handleSave}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator color={colors.white} size="small" />
+                  ) : (
+                    <>
+                      <Icon name="check" size={18} color={colors.white} />
+                      <Text style={commonStyles.btnPrimaryText}>Save Changes</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         )}
 
-        {/* Tips Card */}
-        {!isEditMode && !card && (
+        {/* Tips Card for new users */}
+        {cards.length === 0 && (
           <View style={[commonStyles.card, styles.tipsCard]}>
             <View style={styles.tipsHeader}>
               <Icon name="zap" size={20} color={colors.cyan[400]} />
               <Text style={styles.tipsTitle}>Get Started</Text>
             </View>
             <Text style={styles.tipsText}>
-              Tap "Edit" to customize your business card. Add your contact details,
-              choose a template, and share it with anyone instantly.
+              Tap the "Add Card" button to create your first business card or scan an existing one.
             </Text>
           </View>
         )}
@@ -253,10 +491,25 @@ export default function MeScreen() {
           visible={showShareModal}
           onClose={() => setShowShareModal(false)}
           shareUrl={shareUrl}
-          cardName={formData.full_name}
+          cardName={selectedCard?.full_name || ''}
           onExportVCard={handleExportVCard}
         />
       )}
+
+      {/* Add Card Modal */}
+      <AddCardModal
+        visible={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onCreateDigital={handleCreateDigital}
+        onScanCard={handleScanCard}
+      />
+
+      {/* Card Scanner */}
+      <CardScanner
+        visible={showScanner}
+        onClose={() => setShowScanner(false)}
+        onSave={handleSaveScannedCard}
+      />
     </ScreenWrapper>
   );
 }
@@ -274,126 +527,245 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
+    fontWeight: '500',
     color: colors.gray[400],
+    letterSpacing: -0.2,
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 40,
-    gap: 16,
+    gap: 14,
   },
   emptyIconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.gray[800],
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   emptyTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   emptySubtitle: {
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: '400',
     color: colors.gray[400],
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 24,
+    letterSpacing: -0.2,
+  },
+  signInButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: colors.purple[600],
+    paddingVertical: 16,
+    paddingHorizontal: 36,
+    borderRadius: 14,
+    marginTop: 28,
+    shadowColor: colors.purple[600],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  signInButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.white,
+    letterSpacing: -0.2,
   },
   header: {
     marginTop: 8,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   pageTitle: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '700',
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
   },
   pageSubtitle: {
     fontSize: 15,
+    fontWeight: '400',
     color: colors.gray[400],
-    marginTop: 4,
+    marginTop: 6,
+    letterSpacing: -0.2,
   },
-  previewSection: {
-    marginBottom: 20,
+  cardInfoSection: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  cardInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  cardInfoName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    letterSpacing: -0.4,
+    flex: 1,
+  },
+  primaryTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  primaryTagText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.yellow[400],
+  },
+  cardInfoType: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: colors.gray[500],
+    marginTop: 4,
+    letterSpacing: -0.2,
   },
   actionRow: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 12,
   },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
     paddingVertical: 14,
     borderRadius: 14,
   },
   editButton: {
-    backgroundColor: colors.gray[700],
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   shareButton: {
     backgroundColor: colors.purple[600],
+    shadowColor: colors.purple[600],
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   actionButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.white,
+    letterSpacing: -0.2,
+  },
+  moreActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    marginBottom: 20,
+  },
+  moreActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  moreActionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.gray[400],
+    letterSpacing: -0.2,
+  },
+  deleteText: {
+    color: colors.red[400],
   },
   divider: {
     height: 1,
-    backgroundColor: colors.border,
-    marginVertical: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginVertical: 18,
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.red[900] + '40',
-    padding: 12,
-    borderRadius: 10,
+    gap: 10,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    padding: 14,
+    borderRadius: 12,
     marginTop: 16,
   },
   errorText: {
     fontSize: 14,
+    fontWeight: '500',
     color: colors.red[400],
     flex: 1,
+    letterSpacing: -0.2,
+  },
+  editButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  cancelEditButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  cancelEditText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.gray[400],
+    letterSpacing: -0.2,
   },
   saveButton: {
-    marginTop: 24,
+    flex: 2,
   },
   saveButtonDisabled: {
     opacity: 0.5,
   },
   tipsCard: {
-    backgroundColor: colors.cyan[900] + '30',
-    borderColor: colors.cyan[800],
+    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+    borderColor: 'rgba(6, 182, 212, 0.25)',
   },
   tipsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-    paddingHorizontal: 20,
+    gap: 10,
+    marginBottom: 10,
+    paddingHorizontal: 18,
     paddingTop: 16,
   },
   tipsTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: colors.cyan[400],
+    letterSpacing: -0.3,
   },
   tipsText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '400',
     color: colors.gray[300],
-    lineHeight: 20,
-    paddingHorizontal: 20,
+    lineHeight: 22,
+    paddingHorizontal: 18,
     paddingBottom: 16,
+    letterSpacing: -0.2,
   },
 });

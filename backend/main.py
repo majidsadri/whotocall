@@ -12,8 +12,13 @@ from PIL import Image
 import io
 import openai
 import jwt
+import httpx
 
 load_dotenv()
+
+# Supabase REST API configuration
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://dsljfcswyktyatennjev.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY", os.getenv("SUPABASE_ANON_KEY", ""))
 
 app = FastAPI(title="Reachr API", version="1.0.0")
 
@@ -416,6 +421,42 @@ def generate_share_slug(name: str) -> str:
     # Add random suffix
     suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
     return f"{slug}-{suffix}"
+
+
+def get_card_from_supabase(share_slug: str) -> Optional[dict]:
+    """Look up a card from Supabase user_business_cards table using REST API"""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        print("Supabase not configured")
+        return None
+
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/user_business_cards"
+        params = {
+            "select": "*",
+            "share_slug": f"eq.{share_slug}",
+            "limit": "1"
+        }
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        with httpx.Client() as client:
+            response = client.get(url, params=params, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+            if data and len(data) > 0:
+                print(f"Found card for share_slug: {share_slug}")
+                return data[0]
+            else:
+                print(f"No card found for share_slug: {share_slug}")
+        else:
+            print(f"Supabase API error: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Supabase lookup error: {e}")
+    return None
 
 
 def generate_vcard(card: dict) -> str:
@@ -1132,25 +1173,29 @@ async def get_public_business_card(share_slug: str):
     """Get a business card by its public share slug (no auth required)"""
     from fastapi.responses import HTMLResponse
 
-    # Search through all users' business cards for the matching slug
-    users_dir = os.path.join(DATA_DIR, "users")
     card_data = None
 
-    if os.path.exists(users_dir):
-        for user_id in os.listdir(users_dir):
-            user_dir = os.path.join(users_dir, user_id)
-            card_file = os.path.join(user_dir, "business_card.json")
+    # First check Supabase for multi-card support
+    card_data = get_card_from_supabase(share_slug)
 
-            if os.path.exists(card_file):
-                try:
-                    with open(card_file, "r") as f:
-                        card = json.load(f)
-                        if card.get("share_slug") == share_slug:
-                            card_data = card
-                            break
-                except Exception as e:
-                    print(f"Error reading card file: {e}")
-                    continue
+    # Fallback to file-based storage for legacy cards
+    if not card_data:
+        users_dir = os.path.join(DATA_DIR, "users")
+        if os.path.exists(users_dir):
+            for user_id in os.listdir(users_dir):
+                user_dir = os.path.join(users_dir, user_id)
+                card_file = os.path.join(user_dir, "business_card.json")
+
+                if os.path.exists(card_file):
+                    try:
+                        with open(card_file, "r") as f:
+                            card = json.load(f)
+                            if card.get("share_slug") == share_slug:
+                                card_data = card
+                                break
+                    except Exception as e:
+                        print(f"Error reading card file: {e}")
+                        continue
 
     if not card_data:
         return HTMLResponse(content="""
@@ -1176,7 +1221,7 @@ async def get_public_business_card(share_slug: str):
         """, status_code=404)
 
     # Generate HTML business card page
-    name = card_data.get("full_name", "")
+    name = card_data.get("full_name", "") or card_data.get("card_label", "Business Card")
     title = card_data.get("title", "")
     company = card_data.get("company", "")
     email = card_data.get("email", "")
@@ -1184,6 +1229,12 @@ async def get_public_business_card(share_slug: str):
     website = card_data.get("website", "")
     linkedin = card_data.get("linkedin_url", "")
     avatar = card_data.get("avatar_url", "")
+    card_type = card_data.get("card_type", "digital")
+    scanned_image_url = card_data.get("scanned_image_url", "")
+    card_label = card_data.get("card_label", "")
+
+    # Check if this is a scanned card
+    is_scanned = card_type == "scanned" and scanned_image_url
 
     avatar_html = f'<img src="{avatar}" alt="{name}" class="avatar">' if avatar else f'<div class="avatar-placeholder">{name[:2].upper() if name else "?"}</div>'
 
@@ -1214,6 +1265,87 @@ async def get_public_business_card(share_slug: str):
     # Use quote_via to ensure spaces are %20 not +
     encoded_params = urllib.parse.urlencode(deep_link_params, quote_via=urllib.parse.quote)
     deep_link = f"reachr://add-contact?{encoded_params}"
+
+    # Generate different HTML for scanned cards
+    if is_scanned:
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{card_label or name} - Scanned Business Card</title>
+            <meta property="og:title" content="{card_label or name}">
+            <meta property="og:image" content="{scanned_image_url}">
+            <style>
+                * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    background: linear-gradient(135deg, #0f0f13 0%, #1a1a2e 100%);
+                    color: #e5e5e5;
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                }}
+                .card {{
+                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                    border-radius: 24px;
+                    padding: 24px;
+                    max-width: 450px;
+                    width: 100%;
+                    box-shadow: 0 20px 60px rgba(124, 58, 237, 0.3);
+                    border: 1px solid rgba(255,255,255,0.1);
+                }}
+                .label {{
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #ffffff;
+                    margin-bottom: 16px;
+                    text-align: center;
+                }}
+                .scanned-image {{
+                    width: 100%;
+                    border-radius: 16px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                }}
+                .add-button {{
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    margin-top: 20px;
+                    padding: 16px 24px;
+                    background: linear-gradient(135deg, #7c3aed, #9333ea);
+                    color: white;
+                    font-size: 16px;
+                    font-weight: 600;
+                    border-radius: 14px;
+                    text-decoration: none;
+                    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+                }}
+                .footer {{
+                    margin-top: 20px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: rgba(255,255,255,0.4);
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <p class="label">{card_label or "Scanned Business Card"}</p>
+                <img src="{scanned_image_url}" alt="{card_label}" class="scanned-image">
+                <a href="{deep_link}" class="add-button">
+                    <span>+</span> Add to Reachr
+                </a>
+                <div class="footer">Shared via Reachr</div>
+            </div>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html)
 
     html = f"""
     <!DOCTYPE html>

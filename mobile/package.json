@@ -12,7 +12,6 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-clipboard/clipboard": "^1.16.3",
-    "@react-native-community/audio-toolkit": "^2.0.3",
     "@react-native-community/datetimepicker": "^8.5.1",
     "@react-native-community/geolocation": "^3.4.0",
     "@react-native-community/slider": "^5.1.1",
@@ -22,6 +21,9 @@
     "@supabase/supabase-js": "^2.78.0",
     "react": "19.2.0",
     "react-native": "0.83.1",
+    "react-native-audio-recorder-player": "^3.6.0",
+    "react-native-document-scanner-plugin": "^2.0.3",
+    "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.30.0",
     "react-native-image-picker": "^8.2.1",
     "react-native-inappbrowser-reborn": "^3.7.0",

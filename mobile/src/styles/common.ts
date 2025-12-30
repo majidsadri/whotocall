@@ -1,5 +1,58 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { colors } from './colors';
+
+// Typography constants for consistent styling
+export const typography = {
+  // Display - Hero text
+  displayLarge: {
+    fontSize: 34,
+    fontWeight: '800' as const,
+    letterSpacing: -1,
+    lineHeight: 40,
+  },
+  // Page titles
+  title: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    letterSpacing: -0.8,
+    lineHeight: 34,
+  },
+  // Section headers
+  headline: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    letterSpacing: -0.4,
+    lineHeight: 26,
+  },
+  // Card titles, list items
+  body: {
+    fontSize: 17,
+    fontWeight: '600' as const,
+    letterSpacing: -0.2,
+    lineHeight: 22,
+  },
+  // Secondary text
+  bodyMedium: {
+    fontSize: 15,
+    fontWeight: '500' as const,
+    letterSpacing: -0.1,
+    lineHeight: 20,
+  },
+  // Captions, labels
+  caption: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    letterSpacing: 0,
+    lineHeight: 18,
+  },
+  // Small labels, badges
+  micro: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    letterSpacing: 0.5,
+    lineHeight: 14,
+  },
+};
 
 export const commonStyles = StyleSheet.create({
   // Containers
@@ -21,29 +74,29 @@ export const commonStyles = StyleSheet.create({
   // Cards - Premium glassmorphism style
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 24,
-    marginBottom: 20,
+    borderRadius: 20,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.06)',
   },
 
   cardHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     borderBottomWidth: 0,
     backgroundColor: 'transparent',
   },
 
   cardContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingTop: 0,
-    paddingBottom: 20,
+    paddingBottom: 18,
   },
 
   // Buttons - Premium with glow effect
@@ -55,19 +108,19 @@ export const commonStyles = StyleSheet.create({
     backgroundColor: colors.purple[600],
     paddingHorizontal: 28,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 14,
     shadowColor: colors.purple[600],
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
   },
 
   btnPrimaryText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.3,
+    fontWeight: '600',
+    letterSpacing: -0.2,
   },
 
   btnSecondary: {
@@ -75,10 +128,10 @@ export const commonStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: 24,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
@@ -87,6 +140,7 @@ export const commonStyles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
     fontWeight: '600',
+    letterSpacing: -0.2,
   },
 
   btnGhost: {
@@ -96,7 +150,7 @@ export const commonStyles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 10,
   },
 
   btnGhostText: {
@@ -108,7 +162,7 @@ export const commonStyles = StyleSheet.create({
   btnIcon: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 12,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -122,14 +176,16 @@ export const commonStyles = StyleSheet.create({
 
   // Inputs - Premium dark style
   input: {
-    height: 54,
-    paddingHorizontal: 18,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
+    height: 52,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 14,
     fontSize: 16,
+    fontWeight: '500',
     color: colors.text,
+    letterSpacing: -0.2,
   },
 
   inputFocused: {
@@ -137,45 +193,49 @@ export const commonStyles = StyleSheet.create({
     backgroundColor: 'rgba(124, 58, 237, 0.08)',
     shadowColor: colors.purple[500],
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
 
   textarea: {
-    minHeight: 120,
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
+    minHeight: 110,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 14,
     fontSize: 16,
+    fontWeight: '500',
     color: colors.text,
     textAlignVertical: 'top',
-    lineHeight: 24,
+    lineHeight: 22,
+    letterSpacing: -0.2,
   },
 
   // Labels - Refined typography
   label: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.gray[400],
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 10,
+    letterSpacing: 0.6,
+    marginBottom: 8,
   },
 
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '600',
     color: colors.text,
     letterSpacing: -0.3,
   },
 
   sectionSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: '400',
     color: colors.gray[500],
-    marginTop: 3,
+    marginTop: 2,
+    letterSpacing: -0.1,
   },
 
   // Tags - Pill style with cyan accent
