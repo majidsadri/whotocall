@@ -1281,7 +1281,7 @@ async def get_public_business_card(share_slug: str):
                 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
                 body {{
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                    background: linear-gradient(135deg, #0f0f13 0%, #1a1a2e 100%);
+                    background: linear-gradient(135deg, #0A1815 0%, #163530 100%);
                     color: #e5e5e5;
                     min-height: 100vh;
                     display: flex;
@@ -1290,12 +1290,12 @@ async def get_public_business_card(share_slug: str):
                     padding: 20px;
                 }}
                 .card {{
-                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                    background: linear-gradient(135deg, #1A3A35 0%, #2A524A 100%);
                     border-radius: 24px;
                     padding: 24px;
                     max-width: 450px;
                     width: 100%;
-                    box-shadow: 0 20px 60px rgba(124, 58, 237, 0.3);
+                    box-shadow: 0 20px 60px rgba(91, 154, 139, 0.25);
                     border: 1px solid rgba(255,255,255,0.1);
                 }}
                 .label {{
@@ -1317,13 +1317,13 @@ async def get_public_business_card(share_slug: str):
                     gap: 8px;
                     margin-top: 20px;
                     padding: 16px 24px;
-                    background: linear-gradient(135deg, #7c3aed, #9333ea);
+                    background: linear-gradient(135deg, #5B9A8B, #4A8578);
                     color: white;
                     font-size: 16px;
                     font-weight: 600;
                     border-radius: 14px;
                     text-decoration: none;
-                    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+                    box-shadow: 0 8px 24px rgba(91, 154, 139, 0.4);
                 }}
                 .footer {{
                     margin-top: 20px;
@@ -1360,7 +1360,7 @@ async def get_public_business_card(share_slug: str):
             * {{ box-sizing: border-box; margin: 0; padding: 0; }}
             body {{
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                background: linear-gradient(135deg, #0f0f13 0%, #1a1a2e 100%);
+                background: linear-gradient(135deg, #0A1815 0%, #1A3A35 100%);
                 color: #e5e5e5;
                 min-height: 100vh;
                 display: flex;
@@ -1369,12 +1369,12 @@ async def get_public_business_card(share_slug: str):
                 padding: 20px;
             }}
             .card {{
-                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                background: linear-gradient(135deg, #1A3A35 0%, #2A524A 50%, #3A6B60 100%);
                 border-radius: 24px;
                 padding: 32px;
                 max-width: 400px;
                 width: 100%;
-                box-shadow: 0 20px 60px rgba(124, 58, 237, 0.3);
+                box-shadow: 0 20px 60px rgba(91, 154, 139, 0.3);
                 border: 1px solid rgba(255,255,255,0.1);
                 position: relative;
                 overflow: hidden;
@@ -1385,7 +1385,7 @@ async def get_public_business_card(share_slug: str):
                 left: 0;
                 right: 0;
                 height: 4px;
-                background: linear-gradient(90deg, #00d4ff, #7c3aed, #f472b6);
+                background: linear-gradient(90deg, #7FC4B5, #5B9A8B, #A8D8CE);
             }}
             .header {{
                 display: flex;
@@ -1399,13 +1399,13 @@ async def get_public_business_card(share_slug: str):
                 height: 80px;
                 border-radius: 50%;
                 object-fit: cover;
-                border: 3px solid rgba(0, 212, 255, 0.5);
+                border: 3px solid rgba(127, 196, 181, 0.5);
             }}
             .avatar-placeholder {{
                 width: 80px;
                 height: 80px;
                 border-radius: 50%;
-                background: linear-gradient(135deg, #7c3aed, #06b6d4);
+                background: linear-gradient(135deg, #5B9A8B, #4A8578);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -1421,7 +1421,7 @@ async def get_public_business_card(share_slug: str):
             }}
             .info .title {{
                 font-size: 16px;
-                color: #00d4ff;
+                color: #7FC4B5;
                 margin-bottom: 2px;
             }}
             .info .company {{
@@ -1442,12 +1442,12 @@ async def get_public_business_card(share_slug: str):
                 color: rgba(255,255,255,0.8);
                 text-decoration: none;
                 padding: 12px 16px;
-                background: rgba(0, 212, 255, 0.1);
+                background: rgba(91, 154, 139, 0.15);
                 border-radius: 12px;
                 transition: all 0.2s;
             }}
             .contact-item:hover {{
-                background: rgba(0, 212, 255, 0.2);
+                background: rgba(91, 154, 139, 0.25);
                 transform: translateX(4px);
             }}
             .icon {{
@@ -1460,7 +1460,7 @@ async def get_public_business_card(share_slug: str):
                 color: rgba(255,255,255,0.4);
             }}
             .footer a {{
-                color: #7c3aed;
+                color: #5B9A8B;
                 text-decoration: none;
             }}
             .add-button {{
@@ -1470,18 +1470,18 @@ async def get_public_business_card(share_slug: str):
                 gap: 8px;
                 margin-top: 24px;
                 padding: 16px 24px;
-                background: linear-gradient(135deg, #7c3aed, #9333ea);
+                background: linear-gradient(135deg, #5B9A8B, #4A8578);
                 color: white;
                 font-size: 16px;
                 font-weight: 600;
                 border-radius: 14px;
                 text-decoration: none;
-                box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+                box-shadow: 0 8px 24px rgba(91, 154, 139, 0.4);
                 transition: all 0.2s;
             }}
             .add-button:hover {{
                 transform: translateY(-2px);
-                box-shadow: 0 12px 32px rgba(124, 58, 237, 0.5);
+                box-shadow: 0 12px 32px rgba(91, 154, 139, 0.5);
             }}
             .add-button span {{
                 font-size: 20px;
@@ -1494,7 +1494,7 @@ async def get_public_business_card(share_slug: str):
                 color: rgba(255,255,255,0.5);
             }}
             .app-hint a {{
-                color: #a78bfa;
+                color: #7FC4B5;
                 text-decoration: none;
             }}
         </style>

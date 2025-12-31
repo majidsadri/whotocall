@@ -1,9 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, Animated, Platform } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, Text, Platform } from 'react-native';
 import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Feather';
-import LinearGradient from 'react-native-linear-gradient';
 
 import AddContactScreen from '../screens/AddContactScreen';
 import FindContactScreen from '../screens/FindContactScreen';
@@ -52,61 +51,26 @@ interface TabIconProps {
 }
 
 function TabIcon({ focused, iconName, label }: TabIconProps) {
-  const scaleAnim = useRef(new Animated.Value(focused ? 1 : 0.9)).current;
-  const opacityAnim = useRef(new Animated.Value(focused ? 1 : 0.6)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: focused ? 1 : 0.9,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 7,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: focused ? 1 : 0.6,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [focused]);
-
   return (
-    <Animated.View
-      style={[
-        styles.tabContainer,
-        { transform: [{ scale: scaleAnim }], opacity: opacityAnim }
-      ]}
-    >
-      {focused ? (
-        <LinearGradient
-          colors={['#8B5CF6', '#7C3AED', '#6D28D9']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.iconContainerActive}
-        >
-          <Icon name={iconName} size={22} color="#FFFFFF" />
-        </LinearGradient>
-      ) : (
-        <View style={styles.iconContainerInactive}>
-          <Icon name={iconName} size={22} color="#9CA3AF" />
-        </View>
-      )}
+    <View style={styles.tabContainer}>
+      <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+        <Icon
+          name={iconName}
+          size={22}
+          color={focused ? colors.accent : colors.smoke}
+        />
+      </View>
       <Text style={[styles.label, focused && styles.labelActive]}>
         {label}
       </Text>
-    </Animated.View>
+    </View>
   );
 }
 
 function TabBarBackground() {
   return (
     <View style={styles.tabBarBackground}>
-      <LinearGradient
-        colors={['rgba(15, 15, 19, 0.95)', 'rgba(20, 20, 28, 0.98)']}
-        style={styles.tabBarGradient}
-      />
-      <View style={styles.tabBarGlow} />
+      <View style={styles.tabBarHairline} />
     </View>
   );
 }
@@ -127,6 +91,7 @@ export default function AppNavigator() {
             backgroundColor: 'transparent',
             borderTopWidth: 0,
             elevation: 0,
+            shadowOpacity: 0,
           },
           tabBarBackground: () => <TabBarBackground />,
         }}
@@ -166,57 +131,40 @@ export default function AppNavigator() {
 const styles = StyleSheet.create({
   tabBarBackground: {
     ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
+    backgroundColor: colors.canvas,
   },
-  tabBarGradient: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  tabBarGlow: {
+  tabBarHairline: {
     position: 'absolute',
     top: 0,
-    left: '20%',
-    right: '20%',
-    height: 1,
-    backgroundColor: 'rgba(139, 92, 246, 0.3)',
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+    left: 0,
+    right: 0,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.misty,
   },
   tabContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 8,
   },
-  iconContainerActive: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
   },
-  iconContainerInactive: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  iconContainerActive: {
+    backgroundColor: colors.muted,
   },
   label: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#6B7280',
-    marginTop: 4,
+    color: colors.smoke,
+    marginTop: 2,
     letterSpacing: 0.2,
   },
   labelActive: {
-    color: '#C4B5FD',
+    color: colors.accent,
     fontWeight: '600',
   },
 });

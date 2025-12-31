@@ -81,9 +81,9 @@ export const CARD_TEMPLATES: CardTemplate[] = [
   },
   {
     id: 'gradient',
-    name: 'Gradient',
-    description: 'Purple to cyan gradient',
+    name: 'Sage',
+    description: 'Soft forest tones',
   },
 ];
 
-export const DEFAULT_ACCENT_COLOR = '#7C3AED';
+export const DEFAULT_ACCENT_COLOR = '#28A35D';

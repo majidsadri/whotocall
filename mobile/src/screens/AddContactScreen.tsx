@@ -114,10 +114,10 @@ export default function AddContactScreen() {
     }
   }, [route.params]);
 
-  // Collapsible sections state - Voice Notes expanded by default
+  // Collapsible sections state - Business Card expanded by default (it's required)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    businessCard: true,
     voiceNotes: true,
-    businessCard: false,
     meetingDetails: false,
     linkedin: false,
     priority: false,
@@ -125,8 +125,8 @@ export default function AddContactScreen() {
 
   // Animated values for chevron rotation
   const chevronAnims = useRef({
+    businessCard: new Animated.Value(1),
     voiceNotes: new Animated.Value(1),
-    businessCard: new Animated.Value(0),
     meetingDetails: new Animated.Value(0),
     linkedin: new Animated.Value(0),
     priority: new Animated.Value(0),
@@ -293,9 +293,9 @@ export default function AddContactScreen() {
 
   // Get priority info
   const getPriorityInfo = (value: number) => {
-    if (value >= 67) return { label: 'High', color: colors.purple[500] };
-    if (value >= 34) return { label: 'Medium', color: '#A78BFA' };
-    return { label: 'Low', color: '#8B5CF6' };
+    if (value >= 67) return { label: 'High', color: colors.green[600] };
+    if (value >= 34) return { label: 'Medium', color: colors.green[500] };
+    return { label: 'Low', color: colors.green[400] };
   };
 
   // Success screen
@@ -330,129 +330,95 @@ export default function AddContactScreen() {
           {/* Header */}
           <View style={styles.reviewHeader}>
             <TouchableOpacity onPress={() => setStep('input')}>
-              <Icon name="arrow-left" size={24} color={colors.gray[500]} />
+              <Icon name="arrow-left" size={20} color={colors.gray[500]} />
             </TouchableOpacity>
-            <Text style={styles.reviewHeaderTitle}>Review Contact</Text>
-            <View style={{ width: 24 }} />
+            <Text style={styles.reviewHeaderTitle}>Review</Text>
+            <View style={{ width: 20 }} />
           </View>
 
-          {/* Contact Preview Card */}
-          <View style={styles.previewCard}>
-            <View style={styles.previewHeader}>
-              <View style={styles.previewAvatar}>
-                <Text style={styles.previewAvatarText}>
-                  {extractedData.name?.charAt(0) || '?'}
-                </Text>
-              </View>
-              <View style={styles.previewInfo}>
-                <Text style={styles.previewName}>{extractedData.name || 'Unknown'}</Text>
-                {extractedData.role && (
-                  <Text style={styles.previewRole}>{extractedData.role}</Text>
-                )}
-              </View>
+          {/* Contact Info */}
+          <View style={styles.reviewSection}>
+            <View style={styles.reviewAvatar}>
+              <Text style={styles.reviewAvatarText}>
+                {extractedData.name?.charAt(0) || '?'}
+              </Text>
             </View>
+            <Text style={styles.reviewName}>{extractedData.name || 'Unknown'}</Text>
+            {extractedData.role && <Text style={styles.reviewRole}>{extractedData.role}</Text>}
+          </View>
 
-            <View style={styles.previewDetails}>
-              {extractedData.company && (
-                <View style={styles.detailRow}>
-                  <Icon name="building" size={16} color={colors.gray[400]} />
-                  <Text style={styles.detailText}>{extractedData.company}</Text>
-                </View>
-              )}
-              {extractedData.location && (
-                <View style={styles.detailRow}>
-                  <Icon name="map-pin" size={16} color={colors.gray[400]} />
-                  <Text style={styles.detailText}>{extractedData.location}</Text>
-                </View>
-              )}
-              {extractedData.industry && (
-                <View style={styles.detailRow}>
-                  <Icon name="briefcase" size={16} color={colors.gray[400]} />
-                  <Text style={styles.detailText}>{extractedData.industry}</Text>
-                </View>
-              )}
-              {meetingLocation && (
-                <View style={styles.detailRow}>
-                  <Icon name="navigation" size={16} color={colors.gray[400]} />
-                  <Text style={styles.detailText}>Met at: {meetingLocation}</Text>
-                </View>
-              )}
-            </View>
+          <View style={styles.divider} />
 
-            {/* Priority Bar */}
-            <View style={styles.priorityReview}>
-              <View style={styles.priorityHeader}>
-                <Text style={styles.priorityLabel}>Priority</Text>
-                <Text style={[styles.priorityValue, { color: getPriorityInfo(priority).color }]}>
-                  {getPriorityInfo(priority).label}
-                </Text>
+          {/* Details */}
+          <View style={styles.reviewDetails}>
+            {extractedData.company && (
+              <View style={styles.reviewDetailRow}>
+                <Icon name="briefcase" size={14} color={colors.gray[400]} />
+                <Text style={styles.reviewDetailText}>{extractedData.company}</Text>
               </View>
-              <View style={styles.priorityTrack}>
-                <View style={[styles.priorityFill, { width: `${priority}%` }]} />
+            )}
+            {extractedData.location && (
+              <View style={styles.reviewDetailRow}>
+                <Icon name="map-pin" size={14} color={colors.gray[400]} />
+                <Text style={styles.reviewDetailText}>{extractedData.location}</Text>
               </View>
+            )}
+            {meetingLocation && (
+              <View style={styles.reviewDetailRow}>
+                <Icon name="navigation" size={14} color={colors.gray[400]} />
+                <Text style={styles.reviewDetailText}>{meetingLocation}</Text>
+              </View>
+            )}
+            <View style={styles.reviewDetailRow}>
+              <Icon name="star" size={14} color={getPriorityInfo(priority).color} />
+              <Text style={[styles.reviewDetailText, { color: getPriorityInfo(priority).color }]}>
+                {getPriorityInfo(priority).label} priority
+              </Text>
             </View>
           </View>
 
           {/* Tags */}
           {extractedData.tags && extractedData.tags.length > 0 && (
-            <View style={commonStyles.card}>
-              <View style={commonStyles.cardHeader}>
-                <View style={styles.sectionHeader}>
-                  <View style={[styles.iconBox, { backgroundColor: colors.purple[500] }]}>
-                    <Icon name="zap" size={14} color={colors.white} />
-                  </View>
-                  <View>
-                    <Text style={commonStyles.sectionTitle}>AI-Generated Tags</Text>
-                    <Text style={styles.tagCount}>{extractedData.tags.length} tags</Text>
-                  </View>
-                </View>
-              </View>
-              <View style={commonStyles.cardContent}>
+            <>
+              <View style={styles.divider} />
+              <View style={styles.reviewTags}>
+                <Text style={styles.reviewTagsLabel}>Tags</Text>
                 <View style={styles.tagsGrid}>
                   {extractedData.tags.map((tag, index) => (
                     <TagBadge key={index} label={tag} variant={getTagVariant(index)} />
                   ))}
                 </View>
               </View>
-            </View>
+            </>
           )}
 
           {/* Notes */}
           {transcript && (
-            <View style={commonStyles.card}>
-              <View style={commonStyles.cardContent}>
-                <Text style={commonStyles.label}>Your Notes</Text>
+            <>
+              <View style={styles.divider} />
+              <View style={styles.reviewNotes}>
+                <Text style={styles.reviewNotesLabel}>Notes</Text>
                 <Text style={styles.notesText}>"{transcript}"</Text>
               </View>
-            </View>
+            </>
           )}
 
-          {error && (
-            <View style={commonStyles.errorContainer}>
-              <Text style={commonStyles.errorText}>{error}</Text>
-            </View>
-          )}
+          {error && <Text style={styles.errorText}>{error}</Text>}
 
           {/* Actions */}
           <View style={styles.reviewActions}>
-            <TouchableOpacity
-              style={commonStyles.btnSecondary}
-              onPress={() => setStep('input')}
-            >
-              <Text style={commonStyles.btnSecondaryText}>Back</Text>
+            <TouchableOpacity style={styles.backButton} onPress={() => setStep('input')}>
+              <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[commonStyles.btnPrimary, { flex: 1 }]}
+              style={[styles.saveButton, isProcessing && styles.submitButtonDisabled]}
               onPress={saveContact}
               disabled={isProcessing}
             >
               {isProcessing ? (
                 <ActivityIndicator color={colors.white} size="small" />
               ) : (
-                <>
-                  <Icon name="check" size={18} color={colors.white} />
-                  <Text style={commonStyles.btnPrimaryText}>Save Contact</Text>
-                </>
+                <Text style={styles.saveButtonText}>Save</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -465,128 +431,33 @@ export default function AddContactScreen() {
   return (
     <ScreenWrapper>
       <ScrollView
-        style={commonStyles.container}
+        style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Page Title */}
-        <View style={styles.titleSection}>
-          <Text style={styles.pageTitle}>Add Contact</Text>
-          <Text style={styles.pageSubtitle}>Capture and save new connections</Text>
+        {/* Top Curve Spacer */}
+        <View style={styles.topSpacer}>
+          <View style={styles.topCurve} />
         </View>
 
-        {/* Voice Recording Card */}
-        <View style={commonStyles.card}>
+        {/* Business Card - Primary section */}
+        <View style={styles.section}>
           <TouchableOpacity
-            style={commonStyles.cardHeader}
-            onPress={() => toggleSection('voiceNotes')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#C4B5FD' }]}>
-                <Icon name="mic" size={18} color={colors.white} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={commonStyles.sectionTitle}>Voice Notes</Text>
-                <Text style={commonStyles.sectionSubtitle}>Describe how you met</Text>
-              </View>
-              <View style={[commonStyles.badge, commonStyles.badgeGreen]}>
-                <Text style={[commonStyles.badgeText, commonStyles.badgeGreenText]}>Required</Text>
-              </View>
-              <Animated.View
-                style={[
-                  styles.chevronContainer,
-                  {
-                    transform: [{
-                      rotate: chevronAnims.voiceNotes.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      }),
-                    }],
-                  },
-                ]}
-              >
-                <Icon name="chevron-up" size={18} color="#C4B5FD" />
-              </Animated.View>
-            </View>
-          </TouchableOpacity>
-          {expandedSections.voiceNotes && (
-            <View style={commonStyles.cardContent}>
-              <View style={styles.recordingRow}>
-                <RecordButton
-                  isRecording={isRecording}
-                  isProcessing={isTranscribing}
-                  onPress={handleRecordPress}
-                />
-                <View style={styles.recordingInfo}>
-                  <Text style={styles.recordingTitle}>
-                    {isTranscribing
-                      ? 'Transcribing...'
-                      : isRecording
-                      ? `Recording ${recordingDuration}`
-                      : 'Tap to record'}
-                  </Text>
-                  <Text style={styles.recordingSubtitle}>
-                    {isRecording ? 'Tap again to stop' : 'Tell me about this person'}
-                  </Text>
-                </View>
-                {recordingPath && !isTranscribing && (
-                  <View style={styles.recordingDone}>
-                    <Icon name="check" size={14} color="#A78BFA" />
-                    <Text style={styles.recordingDoneText}>Done</Text>
-                  </View>
-                )}
-              </View>
-              <TextInput
-                style={[commonStyles.textarea, { marginTop: 16 }]}
-                value={transcript}
-                onChangeText={setTranscript}
-                placeholder="How did you meet? What do they do? Any notable details..."
-                placeholderTextColor={colors.gray[400]}
-                multiline
-                numberOfLines={4}
-              />
-            </View>
-          )}
-        </View>
-
-        {/* Business Card */}
-        <View style={commonStyles.card}>
-          <TouchableOpacity
-            style={commonStyles.cardHeader}
+            style={styles.sectionHeader}
             onPress={() => toggleSection('businessCard')}
             activeOpacity={0.7}
           >
-            <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#A78BFA' }]}>
-                <Icon name="camera" size={16} color={colors.white} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={commonStyles.sectionTitle}>Business Card</Text>
-                <Text style={commonStyles.sectionSubtitle}>Scan or upload photo</Text>
-              </View>
-              <View style={commonStyles.badge}>
-                <Text style={commonStyles.badgeText}>Optional</Text>
-              </View>
-              <Animated.View
-                style={[
-                  styles.chevronContainer,
-                  {
-                    transform: [{
-                      rotate: chevronAnims.businessCard.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      }),
-                    }],
-                  },
-                ]}
-              >
-                <Icon name="chevron-up" size={18} color="#A78BFA" />
-              </Animated.View>
+            <View style={styles.sectionIcon}>
+              <Icon name="camera" size={18} color={colors.white} />
             </View>
+            <Text style={styles.sectionTitle}>Scan Card</Text>
+            <Text style={styles.requiredBadge}>Required</Text>
+            <Animated.View style={{ transform: [{ rotate: chevronAnims.businessCard.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
+              <Icon name="chevron-up" size={18} color={colors.gray[400]} />
+            </Animated.View>
           </TouchableOpacity>
           {expandedSections.businessCard && (
-            <View style={commonStyles.cardContent}>
+            <View style={styles.sectionContent}>
               {imageUri ? (
                 <View style={styles.imagePreview}>
                   <Image source={{ uri: imageUri }} style={styles.cardImage} />
@@ -595,213 +466,183 @@ export default function AddContactScreen() {
                   </TouchableOpacity>
                   {isOcrProcessing && (
                     <View style={styles.imageOverlay}>
-                      <ActivityIndicator color="#A78BFA" size="large" />
-                    </View>
-                  )}
-                  {cardText && (
-                    <View style={styles.ocrPreview}>
-                      <Text style={styles.ocrPreviewText} numberOfLines={2}>
-                        Extracted: {cardText.slice(0, 50)}...
-                      </Text>
+                      <ActivityIndicator color={colors.gray[600]} size="large" />
                     </View>
                   )}
                 </View>
               ) : (
                 <TouchableOpacity style={styles.uploadButton} onPress={showPicker}>
-                  <View style={styles.uploadIcon}>
-                    <Icon name="camera" size={26} color={colors.white} />
+                  <View style={styles.uploadIconContainer}>
+                    <Icon name="camera" size={28} color={colors.white} />
                   </View>
-                  <Text style={styles.uploadText}>Tap to scan or upload</Text>
-                  <Text style={styles.uploadHint}>Business card, name badge, etc.</Text>
+                  <Text style={styles.uploadText}>Scan Business or Reachr Card</Text>
+                  <Text style={styles.uploadHint}>Take a photo or choose from gallery</Text>
                 </TouchableOpacity>
               )}
             </View>
           )}
         </View>
 
-        {/* Meeting Details */}
-        <View style={commonStyles.card}>
+        {/* Voice Recording */}
+        <View style={styles.section}>
           <TouchableOpacity
-            style={commonStyles.cardHeader}
+            style={styles.sectionHeader}
+            onPress={() => toggleSection('voiceNotes')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sectionIcon}>
+              <Icon name="mic" size={18} color={colors.white} />
+            </View>
+            <Text style={styles.sectionTitle}>Voice Notes</Text>
+            <Text style={styles.optionalBadge}>Optional</Text>
+            <Animated.View style={{ transform: [{ rotate: chevronAnims.voiceNotes.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
+              <Icon name="chevron-up" size={18} color={colors.gray[400]} />
+            </Animated.View>
+          </TouchableOpacity>
+          {expandedSections.voiceNotes && (
+            <View style={styles.sectionContent}>
+              <View style={styles.recordingRow}>
+                <RecordButton
+                  isRecording={isRecording}
+                  isProcessing={isTranscribing}
+                  onPress={handleRecordPress}
+                />
+                <View style={styles.recordingInfo}>
+                  <Text style={styles.recordingTitle}>
+                    {isTranscribing ? 'Transcribing...' : isRecording ? `Recording ${recordingDuration}` : 'Tap to record'}
+                  </Text>
+                  <Text style={styles.recordingSubtitle}>
+                    {isRecording ? 'Tap again to stop' : 'Describe how you met'}
+                  </Text>
+                </View>
+                {recordingPath && !isTranscribing && (
+                  <Icon name="check-circle" size={18} color={colors.green[500]} />
+                )}
+              </View>
+              <TextInput
+                style={styles.textArea}
+                value={transcript}
+                onChangeText={setTranscript}
+                placeholder="Notes about this person..."
+                placeholderTextColor={colors.gray[400]}
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Meeting Details */}
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.sectionHeader}
             onPress={() => toggleSection('meetingDetails')}
             activeOpacity={0.7}
           >
-            <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#8B5CF6' }]}>
-                <Icon name="clock" size={16} color={colors.white} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={commonStyles.sectionTitle}>Meeting Details</Text>
-                <Text style={commonStyles.sectionSubtitle}>When & where you met</Text>
-              </View>
-              <View style={commonStyles.badge}>
-                <Text style={commonStyles.badgeText}>Auto-filled</Text>
-              </View>
-              <Animated.View
-                style={[
-                  styles.chevronContainer,
-                  {
-                    transform: [{
-                      rotate: chevronAnims.meetingDetails.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      }),
-                    }],
-                  },
-                ]}
-              >
-                <Icon name="chevron-up" size={18} color="#8B5CF6" />
-              </Animated.View>
+            <View style={styles.sectionIcon}>
+              <Icon name="calendar" size={18} color={colors.white} />
             </View>
+            <Text style={styles.sectionTitle}>When & Where</Text>
+            <Text style={styles.optionalBadge}>Auto-filled</Text>
+            <Animated.View style={{ transform: [{ rotate: chevronAnims.meetingDetails.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
+              <Icon name="chevron-up" size={18} color={colors.gray[400]} />
+            </Animated.View>
           </TouchableOpacity>
           {expandedSections.meetingDetails && (
-            <View style={commonStyles.cardContent}>
-              {/* Date picker */}
-              <View style={styles.inputGroup}>
-                <Text style={commonStyles.label}>
-                  <Icon name="calendar" size={10} /> Date & Time
+            <View style={styles.sectionContent}>
+              <TouchableOpacity style={styles.inputRow} onPress={() => setShowDatePicker(true)}>
+                <Icon name="clock" size={18} color={colors.gray[400]} />
+                <Text style={styles.inputText}>
+                  {meetingDate.toLocaleDateString()} at {meetingDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </Text>
-                <TouchableOpacity
-                  style={styles.dateTimeButton}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <Icon name="calendar" size={16} color="#8B5CF6" />
-                  <Text style={styles.dateTimeText}>
-                    {meetingDate.toLocaleDateString()} at {meetingDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                  <Icon name="chevron-down" size={16} color={colors.gray[500]} />
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={meetingDate}
+                  mode="datetime"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(event, date) => {
+                    setShowDatePicker(Platform.OS === 'ios');
+                    if (date) setMeetingDate(date);
+                  }}
+                  themeVariant="dark"
+                />
+              )}
+              <View style={styles.inputRow}>
+                <Icon name="map-pin" size={18} color={colors.gray[400]} />
+                <TextInput
+                  style={styles.inlineInput}
+                  value={meetingLocation}
+                  onChangeText={setMeetingLocation}
+                  placeholder="Location..."
+                  placeholderTextColor={colors.gray[400]}
+                />
+                <TouchableOpacity onPress={getCurrentLocation} disabled={locationLoading}>
+                  {locationLoading ? (
+                    <ActivityIndicator size="small" color={colors.gray[400]} />
+                  ) : (
+                    <Icon name="navigation" size={18} color={colors.gray[600]} />
+                  )}
                 </TouchableOpacity>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={meetingDate}
-                    mode="datetime"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={(event, date) => {
-                      setShowDatePicker(Platform.OS === 'ios');
-                      if (date) setMeetingDate(date);
-                    }}
-                    themeVariant="dark"
-                  />
-                )}
-              </View>
-
-              {/* Location */}
-              <View style={[styles.inputGroup, { marginTop: 16 }]}>
-                <Text style={commonStyles.label}>
-                  <Icon name="map-pin" size={10} /> Location
-                </Text>
-                <View style={styles.locationRow}>
-                  <TextInput
-                    style={[commonStyles.input, { flex: 1 }]}
-                    value={meetingLocation}
-                    onChangeText={setMeetingLocation}
-                    placeholder="City, venue, or event name..."
-                    placeholderTextColor={colors.gray[400]}
-                  />
-                  <TouchableOpacity
-                    style={commonStyles.btnIcon}
-                    onPress={getCurrentLocation}
-                    disabled={locationLoading}
-                  >
-                    {locationLoading ? (
-                      <ActivityIndicator size="small" color={colors.gray[500]} />
-                    ) : (
-                      <Icon name="navigation" size={16} color={colors.gray[500]} />
-                    )}
-                  </TouchableOpacity>
-                </View>
               </View>
             </View>
           )}
         </View>
 
         {/* LinkedIn */}
-        <View style={commonStyles.card}>
+        <View style={styles.section}>
           <TouchableOpacity
-            style={commonStyles.cardHeader}
+            style={styles.sectionHeader}
             onPress={() => toggleSection('linkedin')}
             activeOpacity={0.7}
           >
-            <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#7C3AED' }]}>
-                <Icon name="linkedin" size={14} color={colors.white} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={commonStyles.sectionTitle}>LinkedIn Profile</Text>
-                <Text style={commonStyles.sectionSubtitle}>Add their profile link</Text>
-              </View>
-              <View style={commonStyles.badge}>
-                <Text style={commonStyles.badgeText}>Optional</Text>
-              </View>
-              <Animated.View
-                style={[
-                  styles.chevronContainer,
-                  {
-                    transform: [{
-                      rotate: chevronAnims.linkedin.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      }),
-                    }],
-                  },
-                ]}
-              >
-                <Icon name="chevron-up" size={18} color="#7C3AED" />
-              </Animated.View>
+            <View style={styles.sectionIcon}>
+              <Icon name="linkedin" size={18} color={colors.white} />
             </View>
+            <Text style={styles.sectionTitle}>LinkedIn</Text>
+            <Text style={styles.optionalBadge}>Optional</Text>
+            <Animated.View style={{ transform: [{ rotate: chevronAnims.linkedin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
+              <Icon name="chevron-up" size={18} color={colors.gray[400]} />
+            </Animated.View>
           </TouchableOpacity>
           {expandedSections.linkedin && (
-            <View style={commonStyles.cardContent}>
-              <TextInput
-                style={commonStyles.input}
-                value={linkedinUrl}
-                onChangeText={setLinkedinUrl}
-                placeholder="linkedin.com/in/username"
-                placeholderTextColor={colors.gray[400]}
-                autoCapitalize="none"
-                keyboardType="url"
-              />
+            <View style={styles.sectionContent}>
+              <View style={styles.inputRow}>
+                <Icon name="link" size={18} color={colors.gray[400]} />
+                <TextInput
+                  style={styles.inlineInput}
+                  value={linkedinUrl}
+                  onChangeText={setLinkedinUrl}
+                  placeholder="linkedin.com/in/username"
+                  placeholderTextColor={colors.gray[400]}
+                  autoCapitalize="none"
+                  keyboardType="url"
+                />
+              </View>
             </View>
           )}
         </View>
 
         {/* Priority */}
-        <View style={commonStyles.card}>
+        <View style={styles.section}>
           <TouchableOpacity
-            style={commonStyles.cardHeader}
+            style={styles.sectionHeader}
             onPress={() => toggleSection('priority')}
             activeOpacity={0.7}
           >
-            <View style={styles.sectionHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#6D28D9' }]}>
-                <Icon name="star" size={14} color={colors.white} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={commonStyles.sectionTitle}>Priority Level</Text>
-                <Text style={commonStyles.sectionSubtitle}>How important is this contact?</Text>
-              </View>
-              <Text style={[styles.priorityBadge, { color: getPriorityInfo(priority).color }]}>
-                {getPriorityInfo(priority).label}
-              </Text>
-              <Animated.View
-                style={[
-                  styles.chevronContainer,
-                  {
-                    transform: [{
-                      rotate: chevronAnims.priority.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      }),
-                    }],
-                  },
-                ]}
-              >
-                <Icon name="chevron-up" size={18} color="#6D28D9" />
-              </Animated.View>
+            <View style={styles.sectionIcon}>
+              <Icon name="star" size={18} color={colors.white} />
             </View>
+            <Text style={styles.sectionTitle}>Priority</Text>
+            <Text style={[styles.priorityValue, { color: getPriorityInfo(priority).color }]}>
+              {getPriorityInfo(priority).label}
+            </Text>
+            <Animated.View style={{ transform: [{ rotate: chevronAnims.priority.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) }] }}>
+              <Icon name="chevron-up" size={18} color={colors.gray[400]} />
+            </Animated.View>
           </TouchableOpacity>
           {expandedSections.priority && (
-            <View style={commonStyles.cardContent}>
+            <View style={styles.sectionContent}>
               <PrioritySlider value={priority} onChange={setPriority} />
             </View>
           )}
@@ -809,29 +650,21 @@ export default function AddContactScreen() {
 
         {/* Error message */}
         {(error || audioError || imageError) && (
-          <View style={commonStyles.errorContainer}>
-            <Text style={commonStyles.errorText}>{error || audioError || imageError}</Text>
-          </View>
+          <Text style={styles.errorText}>{error || audioError || imageError}</Text>
         )}
 
         {/* Submit Button */}
         <TouchableOpacity
-          style={[
-            styles.submitButton,
-            (!transcript && !cardText) && commonStyles.btnDisabled,
-          ]}
+          style={[styles.submitButton, (!transcript && !cardText) && styles.submitButtonDisabled]}
           onPress={processAndExtract}
           disabled={isProcessing || isTranscribing || (!transcript && !cardText)}
         >
           {isProcessing ? (
-            <>
-              <ActivityIndicator color={colors.white} size="small" />
-              <Text style={styles.submitButtonText}>Analyzing...</Text>
-            </>
+            <ActivityIndicator color={colors.white} size="small" />
           ) : (
             <>
-              <Icon name="zap" size={20} color={colors.white} />
-              <Text style={styles.submitButtonText}>Extract & Generate Tags</Text>
+              <Icon name="zap" size={16} color={colors.white} />
+              <Text style={styles.submitButtonText}>Generate Tags</Text>
             </>
           )}
         </TouchableOpacity>
@@ -841,160 +674,171 @@ export default function AddContactScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flex: 1,
+    backgroundColor: colors.gray[50],
+  },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 120,
+    padding: 16,
+    paddingTop: 0,
+    paddingBottom: 100,
   },
-  titleSection: {
-    paddingTop: 8,
-    paddingBottom: 24,
+  topSpacer: {
+    height: 24,
+    marginBottom: 8,
+    overflow: 'hidden',
   },
-  pageTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: -0.8,
+  topCurve: {
+    position: 'absolute',
+    top: -40,
+    left: -20,
+    right: -20,
+    height: 60,
+    backgroundColor: colors.gray[800],
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
-  pageSubtitle: {
-    fontSize: 15,
-    fontWeight: '400',
-    color: colors.gray[400],
-    marginTop: 6,
-    letterSpacing: -0.2,
-  },
-  reviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  reviewHeaderTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: colors.text,
-    letterSpacing: -0.4,
+  section: {
+    marginVertical: 6,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: colors.white,
   },
-  iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  chevronContainer: {
-    width: 32,
-    height: 32,
+  sectionIcon: {
+    width: 36,
+    height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.gray[700],
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+  },
+  sectionTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.gray[800],
+  },
+  sectionContent: {
+    paddingTop: 16,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[100],
+    borderLeftWidth: 3,
+    borderLeftColor: colors.green[400],
+    backgroundColor: colors.white,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.gray[100],
+    marginVertical: 6,
+  },
+  requiredBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.green[600],
+    backgroundColor: colors.green[50],
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  optionalBadge: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.gray[400],
   },
   recordingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    paddingVertical: 4,
   },
   recordingInfo: {
     flex: 1,
   },
   recordingTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
-    letterSpacing: -0.3,
+    color: colors.gray[800],
   },
   recordingSubtitle: {
     fontSize: 14,
-    fontWeight: '400',
-    color: colors.gray[500],
+    color: colors.gray[400],
     marginTop: 3,
-    letterSpacing: -0.1,
   },
-  recordingDone: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(167, 139, 250, 0.12)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  recordingDoneText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.purple[400],
+  textArea: {
+    marginTop: 16,
+    fontSize: 15,
+    color: colors.gray[800],
+    backgroundColor: colors.gray[50],
+    borderRadius: 12,
+    padding: 16,
+    minHeight: 90,
+    textAlignVertical: 'top',
   },
   uploadButton: {
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: colors.purple[600],
-    borderRadius: 14,
-    paddingVertical: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(124, 58, 237, 0.08)',
+    paddingVertical: 32,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.gray[300],
+    borderRadius: 16,
+    backgroundColor: colors.gray[50],
+  },
+  uploadIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.gray[700],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: colors.gray[700],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   uploadText: {
     fontSize: 16,
-    color: colors.purple[300],
-    marginTop: 14,
+    color: colors.gray[800],
     fontWeight: '600',
-    letterSpacing: -0.2,
-  },
-  uploadIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: colors.purple[600],
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.purple[500],
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    marginBottom: 4,
   },
   uploadHint: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: colors.gray[500],
-    marginTop: 6,
-    letterSpacing: -0.1,
+    fontSize: 14,
+    color: colors.gray[400],
   },
   imagePreview: {
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
-    shadowColor: colors.gray[900],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
   },
   cardImage: {
     width: '100%',
-    height: 220,
+    height: 180,
     resizeMode: 'cover',
   },
   removeImage: {
     position: 'absolute',
-    top: 14,
-    right: 14,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    top: 10,
+    right: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1005,255 +849,222 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ocrPreview: {
-    position: 'absolute',
-    bottom: 14,
-    left: 14,
-    right: 14,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    padding: 12,
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  ocrPreviewText: {
-    fontSize: 13,
-    color: colors.white,
-    fontWeight: '500',
-    flex: 1,
-  },
-  inputGroup: {},
-  locationRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  dateTimeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 52,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 14,
     gap: 12,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[100],
   },
-  dateTimeText: {
+  inputText: {
     flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '500',
-    letterSpacing: -0.2,
+    fontSize: 15,
+    color: colors.gray[700],
   },
-  priorityBadge: {
+  inlineInput: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.gray[800],
+    padding: 0,
+  },
+  priorityValue: {
     fontSize: 13,
     fontWeight: '600',
-    letterSpacing: -0.2,
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.red[500],
+    textAlign: 'center',
+    marginTop: 16,
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: colors.purple[600],
+    backgroundColor: colors.green[600],
     paddingVertical: 16,
-    borderRadius: 14,
-    marginTop: 20,
-    shadowColor: colors.purple[600],
+    borderRadius: 12,
+    marginTop: 28,
+    shadowColor: colors.green[600],
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  submitButtonText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.white,
-    letterSpacing: -0.2,
-  },
-  // Review screen styles
-  previewCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 18,
-    overflow: 'hidden',
-    marginBottom: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
   },
-  previewHeader: {
+  submitButtonDisabled: {
+    backgroundColor: colors.gray[200],
+    shadowOpacity: 0,
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  // Review screen styles
+  reviewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 18,
-    backgroundColor: colors.purple[600],
-    gap: 14,
+    justifyContent: 'space-between',
+    marginBottom: 24,
   },
-  previewAvatar: {
+  reviewHeaderTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.gray[800],
+  },
+  reviewSection: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  reviewAvatar: {
     width: 56,
     height: 56,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 28,
+    backgroundColor: colors.green[600],
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
   },
-  previewAvatarText: {
+  reviewAvatarText: {
     fontSize: 22,
-    fontWeight: '700',
-    color: colors.white,
-  },
-  previewInfo: {
-    flex: 1,
-  },
-  previewName: {
-    fontSize: 20,
     fontWeight: '600',
     color: colors.white,
-    letterSpacing: -0.4,
   },
-  previewRole: {
-    fontSize: 15,
-    fontWeight: '400',
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 3,
-    letterSpacing: -0.2,
+  reviewName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.gray[800],
   },
-  previewDetails: {
-    padding: 18,
-    gap: 10,
+  reviewRole: {
+    fontSize: 13,
+    color: colors.gray[500],
+    marginTop: 4,
   },
-  detailRow: {
+  reviewDetails: {
+    paddingVertical: 16,
+    gap: 12,
+  },
+  reviewDetailRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  detailText: {
-    fontSize: 15,
-    fontWeight: '400',
+  reviewDetailText: {
+    fontSize: 13,
+    color: colors.gray[600],
+  },
+  reviewTags: {
+    paddingVertical: 16,
+  },
+  reviewTagsLabel: {
+    fontSize: 11,
+    fontWeight: '500',
     color: colors.gray[400],
-    letterSpacing: -0.2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
   },
-  priorityReview: {
-    paddingHorizontal: 18,
-    paddingBottom: 18,
+  reviewNotes: {
+    paddingVertical: 16,
   },
-  priorityHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  reviewNotesLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.gray[400],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: 8,
-  },
-  priorityLabel: {
-    fontSize: 13,
-    color: colors.gray[500],
-    fontWeight: '500',
-    letterSpacing: -0.1,
-  },
-  priorityValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: -0.1,
-  },
-  priorityTrack: {
-    height: 8,
-    backgroundColor: colors.gray[800],
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  priorityFill: {
-    height: '100%',
-    backgroundColor: colors.purple[500],
-    borderRadius: 4,
-  },
-  tagCount: {
-    fontSize: 13,
-    color: colors.purple[400],
-    fontWeight: '500',
-    marginLeft: 8,
-    letterSpacing: -0.1,
   },
   tagsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   notesText: {
-    fontSize: 15,
+    fontSize: 13,
     color: colors.gray[500],
     fontStyle: 'italic',
-    lineHeight: 22,
-    letterSpacing: -0.2,
+    lineHeight: 18,
   },
   reviewActions: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
+    gap: 10,
+    marginTop: 24,
+  },
+  backButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: colors.gray[100],
+  },
+  backButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.gray[600],
+  },
+  saveButton: {
+    flex: 2,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: colors.green[600],
+  },
+  saveButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.white,
   },
   // Success screen styles
   successContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
-    backgroundColor: colors.background,
+    padding: 32,
+    backgroundColor: colors.white,
   },
   successIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: colors.purple[600],
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.green[500],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
-    shadowColor: colors.purple[600],
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    marginBottom: 20,
   },
   successTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 10,
-    letterSpacing: -0.6,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.gray[800],
+    marginBottom: 8,
   },
   successSubtitle: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: colors.gray[400],
+    fontSize: 13,
+    color: colors.gray[500],
     textAlign: 'center',
-    marginBottom: 36,
-    lineHeight: 24,
-    letterSpacing: -0.2,
+    marginBottom: 28,
+    lineHeight: 20,
   },
   successHighlight: {
     fontWeight: '600',
-    color: colors.purple[400],
+    color: colors.green[600],
   },
   successButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.purple[600],
-    paddingHorizontal: 28,
-    paddingVertical: 16,
-    borderRadius: 14,
+    gap: 8,
+    backgroundColor: colors.green[600],
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
     width: '100%',
     justifyContent: 'center',
-    shadowColor: colors.purple[600],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
   },
   successButtonText: {
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.white,
-    letterSpacing: -0.2,
   },
 });

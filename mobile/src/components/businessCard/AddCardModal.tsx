@@ -35,7 +35,7 @@ export function AddCardModal({
           <View style={styles.header}>
             <Text style={styles.title}>Add Business Card</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Icon name="x" size={22} color={colors.gray[400]} />
+              <Icon name="x" size={22} color={colors.smoke} />
             </TouchableOpacity>
           </View>
 
@@ -53,7 +53,7 @@ export function AddCardModal({
               activeOpacity={0.7}
             >
               <View style={[styles.optionIcon, styles.digitalIcon]}>
-                <Icon name="edit-3" size={28} color={colors.purple[400]} />
+                <Icon name="edit-3" size={28} color={colors.accent} />
               </View>
               <View style={styles.optionTextContainer}>
                 <Text style={styles.optionTitle}>Create Digital Card</Text>
@@ -61,7 +61,7 @@ export function AddCardModal({
                   Design a new card with templates
                 </Text>
               </View>
-              <Icon name="chevron-right" size={20} color={colors.gray[500]} />
+              <Icon name="chevron-right" size={20} color={colors.smoke} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -73,7 +73,7 @@ export function AddCardModal({
               activeOpacity={0.7}
             >
               <View style={[styles.optionIcon, styles.scanIcon]}>
-                <Icon name="camera" size={28} color={colors.cyan[400]} />
+                <Icon name="camera" size={28} color={colors.ink} />
               </View>
               <View style={styles.optionTextContainer}>
                 <Text style={styles.optionTitle}>Scan Physical Card</Text>
@@ -81,7 +81,7 @@ export function AddCardModal({
                   Take a photo of an existing card
                 </Text>
               </View>
-              <Icon name="chevron-right" size={20} color={colors.gray[500]} />
+              <Icon name="chevron-right" size={20} color={colors.smoke} />
             </TouchableOpacity>
           </View>
 
@@ -97,16 +97,18 @@ export function AddCardModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: colors.canvas,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 40,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.misty,
   },
   header: {
     flexDirection: 'row',
@@ -115,10 +117,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: -0.5,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.ink,
+    letterSpacing: -0.4,
   },
   closeButton: {
     padding: 8,
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontWeight: '400',
-    color: colors.gray[400],
+    color: colors.smoke,
     marginBottom: 24,
     letterSpacing: -0.2,
   },
@@ -137,25 +139,29 @@ const styles = StyleSheet.create({
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
+    backgroundColor: colors.muted,
+    borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   optionIcon: {
     width: 56,
     height: 56,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   digitalIcon: {
-    backgroundColor: 'rgba(124, 58, 237, 0.15)',
+    backgroundColor: colors.canvas,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   scanIcon: {
-    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    backgroundColor: colors.canvas,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   optionTextContainer: {
     flex: 1,
@@ -163,14 +169,14 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.ink,
     marginBottom: 4,
     letterSpacing: -0.3,
   },
   optionDescription: {
     fontSize: 14,
     fontWeight: '400',
-    color: colors.gray[400],
+    color: colors.smoke,
     letterSpacing: -0.2,
   },
   cancelButton: {
@@ -181,7 +187,7 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.gray[400],
+    color: colors.smoke,
     letterSpacing: -0.2,
   },
 });

@@ -266,7 +266,7 @@ export default function MeScreen() {
     return (
       <ScreenWrapper>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.purple[500]} />
+          <ActivityIndicator size="large" color={colors.gray[500]} />
           <Text style={styles.loadingText}>Loading your cards...</Text>
         </View>
       </ScreenWrapper>
@@ -316,25 +316,26 @@ export default function MeScreen() {
   return (
     <ScreenWrapper>
       <ScrollView
-        style={commonStyles.container}
+        style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.purple[500]}
-            colors={[colors.purple[500]]}
+            tintColor={colors.gray[500]}
+            colors={[colors.gray[500]]}
           />
         }
       >
-        {/* Header */}
-        <View style={styles.header}>
+
+        {/* Page Header */}
+        <View style={styles.pageHeader}>
           <Text style={styles.pageTitle}>My Cards</Text>
           <Text style={styles.pageSubtitle}>
             {cards.length === 0
               ? 'Create your first business card'
-              : `${cards.length} card${cards.length !== 1 ? 's' : ''}`}
+              : `${cards.length} card${cards.length > 1 ? 's' : ''}`}
           </Text>
         </View>
 
@@ -346,141 +347,181 @@ export default function MeScreen() {
           onAddCard={handleAddCard}
         />
 
-        {/* Selected Card Info */}
-        {selectedCard && (
-          <View style={styles.cardInfoSection}>
-            <View style={styles.cardInfoHeader}>
-              <Text style={styles.cardInfoName} numberOfLines={1}>
-                {selectedCard.card_label || selectedCard.full_name || 'Untitled Card'}
-              </Text>
-              {selectedCard.is_primary && (
-                <View style={styles.primaryTag}>
-                  <Icon name="star" size={12} color={colors.yellow[400]} />
-                  <Text style={styles.primaryTagText}>Primary</Text>
+        {/* Card Actions Panel */}
+        {selectedCard && !isEditMode && (
+          <View style={styles.actionsPanel}>
+            {/* Card Info Row */}
+            <View style={styles.cardInfoRow}>
+              <View style={styles.cardInfoLeft}>
+                <Text style={styles.cardInfoName} numberOfLines={1}>
+                  {selectedCard.card_label || selectedCard.full_name || 'Untitled Card'}
+                </Text>
+                <View style={styles.cardInfoMeta}>
+                  <View style={styles.cardTypeBadge}>
+                    <Icon
+                      name={isScannedCard ? 'camera' : 'credit-card'}
+                      size={12}
+                      color={colors.gray[500]}
+                    />
+                    <Text style={styles.cardTypeText}>
+                      {isScannedCard ? 'Scanned' : 'Digital'}
+                    </Text>
+                  </View>
+                  {selectedCard.is_primary && (
+                    <View style={styles.primaryBadge}>
+                      <Icon name="star" size={12} color={colors.yellow[500]} />
+                      <Text style={styles.primaryBadgeText}>Primary</Text>
+                    </View>
+                  )}
                 </View>
-              )}
+              </View>
             </View>
-            <Text style={styles.cardInfoType}>
-              {isScannedCard ? 'Scanned Card' : 'Digital Card'}
-            </Text>
-          </View>
-        )}
 
-        {/* Action Buttons */}
-        {selectedCard && !isEditMode && (
-          <View style={styles.actionRow}>
-            {!isScannedCard && (
+            {/* Main Actions */}
+            <View style={styles.mainActions}>
               <TouchableOpacity
-                style={[styles.actionButton, styles.editButton]}
-                onPress={handleStartEdit}
+                style={styles.shareBtn}
+                onPress={handleShare}
               >
-                <Icon name="edit-2" size={18} color={colors.white} />
-                <Text style={styles.actionButtonText}>Edit</Text>
+                <Icon name="share-2" size={20} color={colors.white} />
+                <Text style={styles.shareBtnText}>Share Card</Text>
               </TouchableOpacity>
-            )}
+            </View>
 
-            <TouchableOpacity
-              style={[styles.actionButton, styles.shareButton]}
-              onPress={handleShare}
-            >
-              <Icon name="share-2" size={18} color={colors.white} />
-              <Text style={styles.actionButtonText}>Share</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+            {/* Quick Actions */}
+            <View style={styles.quickActions}>
+              {!isScannedCard && (
+                <TouchableOpacity
+                  style={styles.quickActionBtn}
+                  onPress={handleStartEdit}
+                >
+                  <View style={styles.quickActionIcon}>
+                    <Icon name="edit-2" size={18} color={colors.green[600]} />
+                  </View>
+                  <Text style={styles.quickActionText}>Edit</Text>
+                </TouchableOpacity>
+              )}
 
-        {/* More Actions */}
-        {selectedCard && !isEditMode && (
-          <View style={styles.moreActionsRow}>
-            {!selectedCard.is_primary && (
+              {!selectedCard.is_primary && (
+                <TouchableOpacity
+                  style={styles.quickActionBtn}
+                  onPress={handleSetPrimary}
+                >
+                  <View style={styles.quickActionIcon}>
+                    <Icon name="star" size={18} color={colors.yellow[500]} />
+                  </View>
+                  <Text style={styles.quickActionText}>Set Primary</Text>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity
-                style={styles.moreActionButton}
-                onPress={handleSetPrimary}
+                style={styles.quickActionBtn}
+                onPress={handleDeleteCard}
               >
-                <Icon name="star" size={16} color={colors.gray[400]} />
-                <Text style={styles.moreActionText}>Set Primary</Text>
+                <View style={[styles.quickActionIcon, styles.deleteIcon]}>
+                  <Icon name="trash-2" size={18} color={colors.gray[400]} />
+                </View>
+                <Text style={[styles.quickActionText, styles.deleteActionText]}>Delete</Text>
               </TouchableOpacity>
-            )}
-
-            <TouchableOpacity
-              style={styles.moreActionButton}
-              onPress={handleDeleteCard}
-            >
-              <Icon name="trash-2" size={16} color={colors.red[400]} />
-              <Text style={[styles.moreActionText, styles.deleteText]}>Delete</Text>
-            </TouchableOpacity>
+            </View>
           </View>
         )}
 
         {/* Edit Mode for Digital Cards */}
         {isEditMode && !isScannedCard && editFormData && (
-          <View style={commonStyles.card}>
-            <View style={commonStyles.cardContent}>
-              {/* Template Selector */}
+          <View style={styles.editSection}>
+            {/* Edit Header */}
+            <View style={styles.editHeader}>
+              <View style={styles.editHeaderIcon}>
+                <Icon name="edit-3" size={24} color={colors.green[600]} />
+              </View>
+              <View style={styles.editHeaderText}>
+                <Text style={styles.editHeaderTitle}>Edit Your Card</Text>
+                <Text style={styles.editHeaderSubtitle}>Customize your digital business card</Text>
+              </View>
+            </View>
+
+            {/* Template Selector */}
+            <View style={styles.editCard}>
+              <Text style={styles.editSectionLabel}>Choose Design</Text>
               <TemplateSelector
                 selectedTemplate={editFormData.template_id || 'gradient'}
                 onSelectTemplate={handleTemplateChange}
               />
+            </View>
 
-              <View style={styles.divider} />
-
-              {/* Edit Form */}
+            {/* Edit Form */}
+            <View style={styles.editCard}>
+              <Text style={styles.editSectionLabel}>Your Information</Text>
               <CardEditForm
                 data={editFormData}
                 onUpdateField={updateEditField}
                 onPickImage={handlePickImage}
               />
+            </View>
 
-              {/* Error Message */}
-              {error && (
-                <View style={styles.errorContainer}>
-                  <Icon name="alert-circle" size={16} color={colors.error} />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              )}
-
-              {/* Save/Cancel Buttons */}
-              <View style={styles.editButtonsRow}>
-                <TouchableOpacity
-                  style={styles.cancelEditButton}
-                  onPress={handleCancelEdit}
-                >
-                  <Text style={styles.cancelEditText}>Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    commonStyles.btnPrimary,
-                    styles.saveButton,
-                    isSaving && styles.saveButtonDisabled,
-                  ]}
-                  onPress={handleSave}
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <ActivityIndicator color={colors.white} size="small" />
-                  ) : (
-                    <>
-                      <Icon name="check" size={18} color={colors.white} />
-                      <Text style={commonStyles.btnPrimaryText}>Save Changes</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+            {/* Error Message */}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Icon name="alert-circle" size={16} color={colors.error} />
+                <Text style={styles.errorText}>{error}</Text>
               </View>
+            )}
+
+            {/* Save/Cancel Buttons */}
+            <View style={styles.editButtonsRow}>
+              <TouchableOpacity
+                style={styles.cancelEditButton}
+                onPress={handleCancelEdit}
+              >
+                <Text style={styles.cancelEditText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.saveEditButton,
+                  isSaving && styles.saveButtonDisabled,
+                ]}
+                onPress={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color={colors.white} size="small" />
+                ) : (
+                  <>
+                    <Icon name="check" size={18} color={colors.white} />
+                    <Text style={styles.saveEditButtonText}>Save Changes</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
         )}
 
         {/* Tips Card for new users */}
         {cards.length === 0 && (
-          <View style={[commonStyles.card, styles.tipsCard]}>
-            <View style={styles.tipsHeader}>
-              <Icon name="zap" size={20} color={colors.cyan[400]} />
-              <Text style={styles.tipsTitle}>Get Started</Text>
+          <View style={styles.welcomeCard}>
+            <View style={styles.welcomeIconContainer}>
+              <Icon name="credit-card" size={32} color={colors.green[600]} />
             </View>
-            <Text style={styles.tipsText}>
-              Tap the "Add Card" button to create your first business card or scan an existing one.
+            <Text style={styles.welcomeTitle}>Create Your First Card</Text>
+            <Text style={styles.welcomeText}>
+              Design a professional digital business card that you can share instantly with anyone.
             </Text>
+            <View style={styles.welcomeFeatures}>
+              <View style={styles.welcomeFeature}>
+                <Icon name="check-circle" size={16} color={colors.green[500]} />
+                <Text style={styles.welcomeFeatureText}>Multiple card designs</Text>
+              </View>
+              <View style={styles.welcomeFeature}>
+                <Icon name="check-circle" size={16} color={colors.green[500]} />
+                <Text style={styles.welcomeFeatureText}>QR code sharing</Text>
+              </View>
+              <View style={styles.welcomeFeature}>
+                <Icon name="check-circle" size={16} color={colors.green[500]} />
+                <Text style={styles.welcomeFeatureText}>Scan paper cards</Text>
+              </View>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -515,15 +556,21 @@ export default function MeScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flex: 1,
+    backgroundColor: colors.gray[50],
+  },
   scrollContent: {
+    paddingTop: 24,
     paddingHorizontal: 20,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
+    backgroundColor: colors.gray[50],
   },
   loadingText: {
     fontSize: 16,
@@ -537,15 +584,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 40,
     gap: 14,
+    backgroundColor: colors.gray[50],
   },
   emptyIconContainer: {
     width: 88,
     height: 88,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.gray[100],
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.gray[200],
   },
   emptyTitle: {
     fontSize: 24,
@@ -567,12 +617,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: colors.purple[600],
+    backgroundColor: colors.green[600],
     paddingVertical: 16,
     paddingHorizontal: 36,
     borderRadius: 14,
     marginTop: 28,
-    shadowColor: colors.purple[600],
+    shadowColor: colors.green[600],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -584,118 +634,199 @@ const styles = StyleSheet.create({
     color: colors.white,
     letterSpacing: -0.2,
   },
-  header: {
-    marginTop: 8,
-    marginBottom: 20,
+  pageHeader: {
+    marginBottom: 24,
   },
   pageTitle: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.gray[900],
     letterSpacing: -0.8,
   },
   pageSubtitle: {
     fontSize: 15,
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.gray[400],
     marginTop: 6,
-    letterSpacing: -0.2,
   },
-  cardInfoSection: {
+  // Actions Panel
+  actionsPanel: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 16,
-    paddingHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  cardInfoHeader: {
+  cardInfoRow: {
+    marginBottom: 20,
+  },
+  cardInfoLeft: {
+    flex: 1,
+  },
+  cardInfoName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.gray[900],
+    letterSpacing: -0.4,
+    marginBottom: 8,
+  },
+  cardInfoMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  cardInfoName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    letterSpacing: -0.4,
-    flex: 1,
+  cardTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: colors.gray[100],
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
-  primaryTag: {
+  cardTypeText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.gray[500],
+  },
+  primaryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    backgroundColor: colors.yellow[50],
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 8,
   },
-  primaryTagText: {
+  primaryBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.yellow[400],
+    color: colors.yellow[600],
   },
-  cardInfoType: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: colors.gray[500],
-    marginTop: 4,
-    letterSpacing: -0.2,
+  mainActions: {
+    marginBottom: 20,
   },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  actionButton: {
-    flex: 1,
+  shareBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    paddingVertical: 14,
+    backgroundColor: colors.green[600],
+    paddingVertical: 16,
     borderRadius: 14,
-  },
-  editButton: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  shareButton: {
-    backgroundColor: colors.purple[600],
-    shadowColor: colors.purple[600],
-    shadowOffset: { width: 0, height: 3 },
+    shadowColor: colors.green[600],
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowRadius: 10,
     elevation: 4,
   },
-  actionButtonText: {
+  shareBtnText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 32,
+  },
+  quickActionBtn: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: colors.gray[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.gray[600],
+  },
+  deleteIcon: {
+    backgroundColor: colors.gray[50],
+  },
+  deleteActionText: {
+    color: colors.gray[400],
+  },
+  // Edit Section Styles
+  editSection: {
+    marginTop: 16,
+  },
+  editHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 4,
+  },
+  editHeaderIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: colors.green[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  editHeaderText: {
+    flex: 1,
+  },
+  editHeaderTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.gray[900],
+    letterSpacing: -0.4,
+  },
+  editHeaderSubtitle: {
+    fontSize: 14,
+    color: colors.gray[400],
+    marginTop: 4,
+  },
+  editCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  editSectionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.gray[500],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 16,
+  },
+  saveEditButton: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.green[600],
+    paddingVertical: 16,
+    borderRadius: 14,
+  },
+  saveEditButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.white,
-    letterSpacing: -0.2,
-  },
-  moreActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 20,
-  },
-  moreActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  moreActionText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.gray[400],
-    letterSpacing: -0.2,
-  },
-  deleteText: {
-    color: colors.red[400],
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.green[100],
     marginVertical: 18,
   },
   errorContainer: {
@@ -723,23 +854,76 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: colors.gray[200],
   },
   cancelEditText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.gray[400],
-    letterSpacing: -0.2,
+    color: colors.gray[600],
   },
   saveButton: {
     flex: 2,
   },
   saveButtonDisabled: {
     opacity: 0.5,
+  },
+  welcomeCard: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  welcomeIconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: colors.green[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  welcomeTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.gray[900],
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  welcomeText: {
+    fontSize: 15,
+    color: colors.gray[500],
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+    paddingHorizontal: 10,
+  },
+  welcomeFeatures: {
+    gap: 12,
+    alignSelf: 'stretch',
+  },
+  welcomeFeature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.gray[50],
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  welcomeFeatureText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.gray[700],
   },
   tipsCard: {
     backgroundColor: 'rgba(6, 182, 212, 0.1)',

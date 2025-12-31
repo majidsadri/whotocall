@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Contact } from '../types';
-import TagBadge, { getTagVariant } from './TagBadge';
+import TagBadge from './TagBadge';
 import { colors } from '../styles/colors';
 
 interface ContactCardProps {
@@ -42,7 +42,6 @@ export default function ContactCard({
     if (contact.linkedin_url) {
       Linking.openURL(contact.linkedin_url);
     } else {
-      // Google search for LinkedIn profile
       const searchQuery = encodeURIComponent(
         `${contact.name} ${contact.company || ''} LinkedIn`
       );
@@ -85,7 +84,7 @@ export default function ContactCard({
     }
   };
 
-  // Compact card (not expanded)
+  // Compact card (not expanded) - ListRow style
   if (!expanded) {
     return (
       <TouchableOpacity
@@ -122,7 +121,7 @@ export default function ContactCard({
             onPress={callPhone}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Icon name="phone" size={16} color={colors.cyan[400]} />
+            <Icon name="phone" size={16} color={colors.accent} />
           </TouchableOpacity>
         )}
 
@@ -138,12 +137,12 @@ export default function ContactCard({
           <Icon
             name="linkedin"
             size={16}
-            color={contact.linkedin_url ? '#0A66C2' : colors.gray[400]}
+            color={contact.linkedin_url ? '#0A66C2' : colors.smoke}
           />
         </TouchableOpacity>
 
         {/* Expand indicator */}
-        <Icon name="chevron-right" size={18} color={colors.gray[400]} />
+        <Icon name="chevron-right" size={18} color={colors.smoke} />
       </TouchableOpacity>
     );
   }
@@ -190,7 +189,7 @@ export default function ContactCard({
           <Icon
             name="linkedin"
             size={20}
-            color={contact.linkedin_url ? '#0A66C2' : colors.gray[400]}
+            color={contact.linkedin_url ? '#0A66C2' : colors.smoke}
           />
         </TouchableOpacity>
       </View>
@@ -199,19 +198,19 @@ export default function ContactCard({
       <View style={styles.expandedDetails}>
         {contact.location && (
           <View style={styles.detailRow}>
-            <Icon name="map-pin" size={14} color={colors.gray[400]} />
+            <Icon name="map-pin" size={14} color={colors.smoke} />
             <Text style={styles.detailText}>{contact.location}</Text>
           </View>
         )}
         {contact.industry && (
           <View style={styles.detailRow}>
-            <Icon name="briefcase" size={14} color={colors.gray[400]} />
+            <Icon name="briefcase" size={14} color={colors.smoke} />
             <Text style={styles.detailText}>{contact.industry}</Text>
           </View>
         )}
         {contact.meeting_location && (
           <View style={styles.detailRow}>
-            <Icon name="navigation" size={14} color={colors.gray[400]} />
+            <Icon name="navigation" size={14} color={colors.smoke} />
             <Text style={styles.detailText}>Met at: {contact.meeting_location}</Text>
           </View>
         )}
@@ -220,10 +219,10 @@ export default function ContactCard({
       {/* All Tags */}
       {contact.tags && contact.tags.length > 0 && (
         <View style={styles.tagsSection}>
-          <Text style={styles.tagsLabel}>Tags</Text>
+          <Text style={styles.tagsLabel}>TAGS</Text>
           <View style={styles.tagsContainer}>
             {contact.tags.map((tag, index) => (
-              <TagBadge key={index} label={tag} variant={getTagVariant(index)} />
+              <TagBadge key={index} label={tag} />
             ))}
           </View>
         </View>
@@ -232,7 +231,7 @@ export default function ContactCard({
       {/* Match reason */}
       {matchReason && (
         <View style={styles.matchReasonContainer}>
-          <Icon name="zap" size={12} color={colors.cyan[400]} />
+          <Icon name="zap" size={12} color={colors.accent} />
           <Text style={styles.matchReasonText}>{matchReason}</Text>
         </View>
       )}
@@ -240,7 +239,7 @@ export default function ContactCard({
       {/* Notes */}
       {contact.raw_context && (
         <View style={styles.notesSection}>
-          <Text style={styles.notesLabel}>Notes</Text>
+          <Text style={styles.notesLabel}>NOTES</Text>
           <Text style={styles.notesText}>"{contact.raw_context}"</Text>
         </View>
       )}
@@ -253,7 +252,8 @@ export default function ContactCard({
               style={styles.actionButton}
               onPress={callPhone}
             >
-              <Icon name="phone" size={16} color={colors.cyan[400]} />
+              <Icon name="phone" size={16} color={colors.accent} />
+              <Text style={styles.actionButtonText}>Call</Text>
             </TouchableOpacity>
           )}
           {contact.email && (
@@ -261,7 +261,8 @@ export default function ContactCard({
               style={styles.actionButton}
               onPress={sendEmail}
             >
-              <Icon name="mail" size={16} color={colors.gray[400]} />
+              <Icon name="mail" size={16} color={colors.smoke} />
+              <Text style={styles.actionButtonText}>Email</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -269,7 +270,7 @@ export default function ContactCard({
 
       {/* Collapse hint */}
       <View style={styles.collapseHint}>
-        <Icon name="chevron-up" size={16} color={colors.gray[400]} />
+        <Icon name="chevron-up" size={16} color={colors.smoke} />
         <Text style={styles.collapseText}>Tap to collapse</Text>
       </View>
     </TouchableOpacity>
@@ -277,34 +278,33 @@ export default function ContactCard({
 }
 
 const styles = StyleSheet.create({
-  // Compact card styles
+  // Compact card styles - ListRow style
   compactContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.misty,
   },
   compactAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   compactAvatarPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.purple[600],
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.green[600],
     alignItems: 'center',
     justifyContent: 'center',
   },
   compactAvatarText: {
-    color: colors.white,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
+    color: colors.white,
   },
   compactInfo: {
     flex: 1,
@@ -312,61 +312,61 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   compactName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
+    fontSize: 17,
+    fontWeight: '500',
+    color: colors.ink,
     marginBottom: 2,
+    letterSpacing: -0.2,
   },
   compactSubtitle: {
-    fontSize: 13,
-    color: colors.gray[400],
+    fontSize: 14,
+    color: colors.smoke,
   },
   compactActionButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    backgroundColor: colors.muted,
     marginRight: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   linkedinButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
   },
   linkedinButtonLarge: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   linkedinButtonActive: {
-    backgroundColor: 'rgba(10, 102, 194, 0.15)',
+    backgroundColor: 'rgba(10, 102, 194, 0.1)',
   },
   linkedinButtonSearch: {
-    backgroundColor: colors.gray[800],
-    borderWidth: 1,
-    borderColor: colors.gray[700],
+    backgroundColor: colors.muted,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
 
   // Expanded card styles
   expandedContainer: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.purple[700],
-    shadowColor: colors.purple[500],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 4,
+    backgroundColor: colors.canvas,
+    borderRadius: 16,
+    padding: 20,
+    marginVertical: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent,
   },
   expandedHeader: {
     flexDirection: 'row',
@@ -376,39 +376,37 @@ const styles = StyleSheet.create({
   expandedAvatar: {
     width: 56,
     height: 56,
-    borderRadius: 16,
+    borderRadius: 28,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   expandedAvatarPlaceholder: {
     width: 56,
     height: 56,
-    borderRadius: 16,
-    backgroundColor: colors.purple[600],
+    borderRadius: 28,
+    backgroundColor: colors.green[600],
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.purple[500],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   expandedAvatarText: {
-    color: colors.white,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
+    color: colors.white,
   },
   expandedHeaderInfo: {
     flex: 1,
     marginLeft: 14,
   },
   expandedName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.ink,
     marginBottom: 4,
+    letterSpacing: -0.4,
   },
   expandedSubtitle: {
-    fontSize: 14,
-    color: colors.gray[400],
+    fontSize: 15,
+    color: colors.smoke,
   },
   expandedDetails: {
     marginBottom: 16,
@@ -420,7 +418,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: colors.gray[400],
+    color: colors.smoke,
     marginLeft: 10,
   },
   tagsSection: {
@@ -428,10 +426,10 @@ const styles = StyleSheet.create({
   },
   tagsLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    color: colors.gray[500],
+    fontWeight: '700',
+    color: colors.smoke,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 1.2,
     marginBottom: 10,
   },
   tagsContainer: {
@@ -442,37 +440,37 @@ const styles = StyleSheet.create({
   matchReasonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+    backgroundColor: colors.muted,
     borderRadius: 10,
-    padding: 10,
+    padding: 12,
     marginBottom: 16,
     gap: 8,
   },
   matchReasonText: {
-    fontSize: 13,
-    color: colors.cyan[400],
+    fontSize: 14,
+    color: colors.ink,
     fontWeight: '500',
     flex: 1,
   },
   notesSection: {
     marginBottom: 16,
     paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.misty,
   },
   notesLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    color: colors.gray[500],
+    fontWeight: '700',
+    color: colors.smoke,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 1.2,
     marginBottom: 10,
   },
   notesText: {
-    fontSize: 14,
-    color: colors.gray[400],
+    fontSize: 15,
+    color: colors.smoke,
     fontStyle: 'italic',
-    lineHeight: 20,
+    lineHeight: 22,
   },
   actions: {
     flexDirection: 'row',
@@ -480,14 +478,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: colors.gray[800],
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.gray[700],
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 9999,
+    backgroundColor: colors.muted,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.ink,
   },
   collapseHint: {
     flexDirection: 'row',
@@ -495,11 +499,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.misty,
   },
   collapseText: {
     fontSize: 12,
-    color: colors.gray[500],
+    color: colors.smoke,
   },
 });

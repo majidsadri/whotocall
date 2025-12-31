@@ -103,7 +103,7 @@ export default function IndustryModal({
 
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.purple[500]} />
+              <ActivityIndicator size="large" color={colors.green[600]} />
             </View>
           ) : (
             <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
@@ -136,7 +136,7 @@ export default function IndustryModal({
                       {industry.name}
                     </Text>
                     {isSelected && (
-                      <Icon name="check" size={20} color={colors.purple[400]} />
+                      <Icon name="check" size={20} color={colors.green[500]} />
                     )}
                   </TouchableOpacity>
                 );
@@ -232,8 +232,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   industryItemSelected: {
-    borderColor: colors.purple[500],
-    backgroundColor: colors.purple[900] + '40',
+    borderColor: colors.green[600],
+    backgroundColor: colors.green[900] + '40',
   },
   industryIcon: {
     width: 44,
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   industryIconSelected: {
-    backgroundColor: colors.purple[600],
+    backgroundColor: colors.green[600],
   },
   industryName: {
     flex: 1,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.gray[800],
   },
   saveButton: {
-    backgroundColor: colors.purple[600],
+    backgroundColor: colors.green[600],
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',

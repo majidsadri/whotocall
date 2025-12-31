@@ -145,29 +145,29 @@ export function ShareModal({
           {/* Share Options */}
           <View style={styles.options}>
             <TouchableOpacity style={styles.option} onPress={handleCopyLink}>
-              <View style={[styles.optionIcon, { backgroundColor: '#C4B5FD' }]}>
-                <Icon name={copied ? 'check' : 'copy'} size={20} color={copied ? '#22C55E' : colors.white} />
+              <View style={[styles.optionIcon, copied && styles.optionIconSuccess]}>
+                <Icon name={copied ? 'check' : 'copy'} size={20} color={copied ? colors.white : colors.ink} />
               </View>
               <Text style={styles.optionLabel}>{copied ? 'Copied!' : 'Copy Link'}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.option} onPress={handleShareEmail}>
-              <View style={[styles.optionIcon, { backgroundColor: '#A78BFA' }]}>
-                <Icon name="mail" size={20} color={colors.white} />
+              <View style={styles.optionIcon}>
+                <Icon name="mail" size={20} color={colors.ink} />
               </View>
               <Text style={styles.optionLabel}>Email</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.option} onPress={handleShareSMS}>
-              <View style={[styles.optionIcon, { backgroundColor: '#8B5CF6' }]}>
-                <Icon name="message-circle" size={20} color={colors.white} />
+              <View style={styles.optionIcon}>
+                <Icon name="message-circle" size={20} color={colors.ink} />
               </View>
               <Text style={styles.optionLabel}>SMS</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.option} onPress={handleNativeShare}>
-              <View style={[styles.optionIcon, { backgroundColor: '#7C3AED' }]}>
-                <Icon name="share-2" size={20} color={colors.white} />
+              <View style={styles.optionIcon}>
+                <Icon name="share-2" size={20} color={colors.ink} />
               </View>
               <Text style={styles.optionLabel}>More</Text>
             </TouchableOpacity>
@@ -176,7 +176,7 @@ export function ShareModal({
           {/* vCard Export */}
           {onExportVCard && (
             <TouchableOpacity style={styles.vcardButton} onPress={onExportVCard}>
-              <Icon name="download" size={18} color="#A78BFA" />
+              <Icon name="download" size={18} color={colors.accent} />
               <Text style={styles.vcardText}>Export as vCard (.vcf)</Text>
             </TouchableOpacity>
           )}
@@ -194,31 +194,34 @@ export function ShareModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: colors.canvas,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     paddingHorizontal: 24,
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
     paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.misty,
   },
   handle: {
-    width: 40,
+    width: 36,
     height: 4,
-    backgroundColor: colors.gray[600],
+    backgroundColor: colors.misty,
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 20,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.ink,
     textAlign: 'center',
     marginBottom: 24,
+    letterSpacing: -0.4,
   },
   qrContainer: {
     alignItems: 'center',
@@ -227,7 +230,7 @@ const styles = StyleSheet.create({
   qrHint: {
     marginTop: 12,
     fontSize: 14,
-    color: colors.gray[400],
+    color: colors.smoke,
   },
   options: {
     flexDirection: 'row',
@@ -241,13 +244,20 @@ const styles = StyleSheet.create({
   optionIcon: {
     width: 52,
     height: 52,
-    borderRadius: 14,
+    borderRadius: 26,
+    backgroundColor: colors.muted,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  optionIconSuccess: {
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
+  },
   optionLabel: {
     fontSize: 13,
-    color: colors.gray[300],
+    color: colors.smoke,
     fontWeight: '500',
   },
   vcardButton: {
@@ -256,24 +266,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.misty,
     marginBottom: 16,
   },
   vcardText: {
     fontSize: 15,
-    color: '#A78BFA',
+    color: colors.accent,
     fontWeight: '500',
   },
   closeButton: {
-    backgroundColor: colors.gray[800],
+    backgroundColor: colors.ink,
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 9999,
     alignItems: 'center',
   },
   closeText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.white,
   },
 });

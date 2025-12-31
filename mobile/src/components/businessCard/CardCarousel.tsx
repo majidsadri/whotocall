@@ -69,7 +69,7 @@ export function CardCarousel({
         )}
         {item.card_type === 'scanned' && (
           <View style={styles.typeBadge}>
-            <Icon name="camera" size={10} color={colors.cyan[400]} />
+            <Icon name="camera" size={10} color={colors.accent} />
             <Text style={styles.typeBadgeText}>Scanned</Text>
           </View>
         )}
@@ -85,7 +85,7 @@ export function CardCarousel({
     >
       <View style={styles.addCardContent}>
         <View style={styles.addCardIconCircle}>
-          <Icon name="plus" size={28} color={colors.purple[400]} />
+          <Icon name="plus" size={28} color={colors.green[600]} />
         </View>
         <Text style={styles.addCardText}>Add Card</Text>
         <Text style={styles.addCardSubtext}>Create or scan</Text>
@@ -165,24 +165,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: colors.canvas,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   typeBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: colors.cyan[400],
+    color: colors.accent,
   },
   addCardButton: {
     width: CARD_WIDTH,
     height: 200,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: colors.purple[600],
-    backgroundColor: 'rgba(124, 58, 237, 0.08)',
+    borderColor: colors.green[300],
+    backgroundColor: colors.green[50],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -193,20 +195,25 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(124, 58, 237, 0.15)',
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+    shadowColor: colors.green[600],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
   },
   addCardText: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.purple[400],
+    color: colors.green[700],
     marginBottom: 4,
   },
   addCardSubtext: {
     fontSize: 14,
-    color: colors.gray[500],
+    color: colors.green[500],
   },
   pagination: {
     flexDirection: 'row',
@@ -218,10 +225,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.gray[700],
+    backgroundColor: colors.green[200],
   },
   dotActive: {
-    backgroundColor: colors.purple[500],
+    backgroundColor: colors.green[600],
     width: 24,
   },
 });

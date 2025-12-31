@@ -20,20 +20,23 @@ const priorityConfig = {
   low: {
     label: 'Low',
     value: 17,
-    color: colors.cyan[400],
-    bgColor: colors.cyan[400] + '20',
+    color: colors.green[400],
+    bgColor: '#F0FDF4', // Very light green tint
+    borderColor: colors.green[300],
   },
   medium: {
     label: 'Medium',
     value: 50,
-    color: colors.purple[400],
-    bgColor: colors.purple[400] + '20',
+    color: colors.green[500],
+    bgColor: '#ECFDF5', // Slightly more green
+    borderColor: colors.green[400],
   },
   high: {
     label: 'High',
     value: 83,
-    color: colors.purple[600],
-    bgColor: colors.purple[600] + '20',
+    color: colors.green[600],
+    bgColor: '#D1FAE5', // More noticeable green
+    borderColor: colors.green[500],
   },
 };
 
@@ -64,7 +67,7 @@ export default function PrioritySlider({
               style={[
                 styles.segment,
                 isActive && styles.segmentActive,
-                isActive && { backgroundColor: config.bgColor, borderColor: config.color },
+                isActive && { backgroundColor: config.bgColor, borderColor: config.borderColor },
               ]}
               onPress={() => handleSelect(level)}
               activeOpacity={0.7}
@@ -109,9 +112,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 8,
     borderRadius: 10,
-    backgroundColor: colors.gray[800],
+    backgroundColor: colors.gray[50],
     borderWidth: 1.5,
-    borderColor: colors.gray[700],
+    borderColor: colors.gray[200],
     marginHorizontal: 5,
   },
   segmentActive: {
@@ -125,7 +128,7 @@ const styles = StyleSheet.create({
   },
   segmentText: {
     fontSize: 14,
-    color: colors.gray[400],
+    color: colors.smoke,
     fontWeight: '500',
   },
 });

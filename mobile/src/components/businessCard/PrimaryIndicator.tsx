@@ -27,17 +27,17 @@ export function PrimaryIndicator({ size = 'medium' }: PrimaryIndicatorProps) {
         },
       ]}
     >
-      <Icon name="star" size={icon} color={colors.yellow[400]} />
+      <Icon name="star" size={icon} color={colors.accent} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(250, 204, 21, 0.2)',
+    backgroundColor: colors.canvas,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(250, 204, 21, 0.4)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
 });

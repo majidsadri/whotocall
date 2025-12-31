@@ -16,7 +16,7 @@ interface QRCodeDisplayProps {
   backgroundColor?: string;
 }
 
-export function QRCodeDisplay({ value, size = 200, backgroundColor = colors.white }: QRCodeDisplayProps) {
+export function QRCodeDisplay({ value, size = 200, backgroundColor = colors.canvas }: QRCodeDisplayProps) {
   if (!QRCode) {
     return (
       <View style={[styles.placeholder, { width: size, height: size }]}>
@@ -32,7 +32,7 @@ export function QRCodeDisplay({ value, size = 200, backgroundColor = colors.whit
         value={value}
         size={size}
         backgroundColor={backgroundColor}
-        color={colors.gray[900]}
+        color={colors.ink}
       />
     </View>
   );
@@ -44,24 +44,26 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   placeholder: {
-    backgroundColor: colors.gray[800],
+    backgroundColor: colors.muted,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.border,
+    borderWidth: StyleSheet.hairlineWidth,
     borderStyle: 'dashed',
+    borderColor: colors.misty,
   },
   placeholderText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.gray[400],
+    color: colors.smoke,
   },
   placeholderSubtext: {
     fontSize: 12,
-    color: colors.gray[500],
+    color: colors.smoke,
     marginTop: 4,
   },
 });

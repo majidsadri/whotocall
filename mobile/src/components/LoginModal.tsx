@@ -7,7 +7,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Linking,
-  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { InAppBrowser } from 'react-native-inappbrowser-reborn';
@@ -42,11 +41,11 @@ export default function LoginModal({ visible, onClose }: LoginModalProps) {
         const authResult = await InAppBrowser.openAuth(result.url, 'reachr://auth/callback', {
           // iOS options
           dismissButtonStyle: 'cancel',
-          preferredBarTintColor: colors.background,
-          preferredControlTintColor: colors.cyan[400],
+          preferredBarTintColor: colors.canvas,
+          preferredControlTintColor: colors.accent,
           // Android options
           showTitle: true,
-          toolbarColor: colors.background,
+          toolbarColor: colors.canvas,
           enableUrlBarHiding: true,
           enableDefaultShare: false,
         });
@@ -192,19 +191,21 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: colors.canvas,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: 24,
     paddingBottom: 40,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.misty,
   },
   handleBar: {
-    width: 40,
+    width: 36,
     height: 4,
-    backgroundColor: colors.gray[600],
+    backgroundColor: colors.misty,
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 24,
@@ -214,14 +215,15 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.ink,
     marginBottom: 8,
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontSize: 15,
-    color: colors.textSecondary,
+    color: colors.smoke,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -230,30 +232,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#0A66C2',
-    paddingVertical: 16,
-    borderRadius: 14,
+    paddingVertical: 14,
+    borderRadius: 9999,
     gap: 12,
     marginBottom: 16,
   },
   linkedinButtonText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.white,
   },
   errorContainer: {
-    backgroundColor: colors.red[900],
+    backgroundColor: colors.muted,
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.danger,
   },
   errorText: {
-    color: colors.red[300],
+    color: colors.danger,
     fontSize: 14,
     textAlign: 'center',
   },
   optionalNote: {
     fontSize: 13,
-    color: colors.gray[500],
+    color: colors.smoke,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -263,7 +267,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 16,
-    color: colors.textSecondary,
+    color: colors.smoke,
     fontWeight: '500',
   },
 });

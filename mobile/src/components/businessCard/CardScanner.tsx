@@ -101,7 +101,7 @@ export function CardScanner({
   const renderCaptureStep = () => (
     <View style={styles.stepContainer}>
       <View style={styles.captureIconContainer}>
-        <Icon name="camera" size={48} color={colors.cyan[400]} />
+        <Icon name="camera" size={48} color={colors.accent} />
       </View>
       <Text style={styles.stepTitle}>Scan Business Card</Text>
       <Text style={styles.stepDescription}>
@@ -110,7 +110,7 @@ export function CardScanner({
 
       {/* Tip for scanning */}
       <View style={styles.tipContainer}>
-        <Icon name="zap" size={14} color={colors.cyan[400]} />
+        <Icon name="zap" size={14} color={colors.accent} />
         <Text style={styles.tipText}>
           Camera mode auto-detects card edges and straightens the image
         </Text>
@@ -139,8 +139,8 @@ export function CardScanner({
           disabled={isScanning}
           activeOpacity={0.7}
         >
-          <Icon name="image" size={24} color={colors.white} />
-          <Text style={styles.captureButtonText}>Gallery</Text>
+          <Icon name="image" size={24} color={colors.ink} />
+          <Text style={styles.galleryButtonText}>Gallery</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -159,7 +159,7 @@ export function CardScanner({
             onPress={handleRetake}
             activeOpacity={0.7}
           >
-            <Icon name="refresh-cw" size={16} color={colors.white} />
+            <Icon name="refresh-cw" size={16} color={colors.ink} />
             <Text style={styles.retakeText}>Retake</Text>
           </TouchableOpacity>
         </View>
@@ -173,7 +173,7 @@ export function CardScanner({
       <TextInput
         style={styles.labelInput}
         placeholder="e.g., John's Card, Acme Corp"
-        placeholderTextColor={colors.gray[500]}
+        placeholderTextColor={colors.smoke}
         value={label}
         onChangeText={setLabel}
         autoFocus
@@ -201,7 +201,7 @@ export function CardScanner({
 
   const renderSavingStep = () => (
     <View style={styles.stepContainer}>
-      <ActivityIndicator size="large" color={colors.purple[500]} />
+      <ActivityIndicator size="large" color={colors.accent} />
       <Text style={styles.stepTitle}>Saving Card</Text>
       <Text style={styles.stepDescription}>
         Adding your business card...
@@ -219,7 +219,7 @@ export function CardScanner({
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Icon name="x" size={24} color={colors.gray[400]} />
+            <Icon name="x" size={24} color={colors.smoke} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Scan Card</Text>
           <View style={styles.headerSpacer} />
@@ -238,7 +238,7 @@ export function CardScanner({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.canvas,
   },
   header: {
     flexDirection: 'row',
@@ -246,8 +246,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.misty,
   },
   closeButton: {
     padding: 8,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.ink,
     letterSpacing: -0.3,
   },
   headerSpacer: {
@@ -275,22 +275,24 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    backgroundColor: colors.muted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   stepTitle: {
     fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
+    fontWeight: '600',
+    color: colors.ink,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
   stepDescription: {
     fontSize: 16,
     fontWeight: '400',
-    color: colors.gray[400],
+    color: colors.smoke,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -301,16 +303,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+    backgroundColor: colors.muted,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     marginBottom: 28,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   tipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: colors.cyan[400],
+    color: colors.smoke,
     flex: 1,
     letterSpacing: -0.2,
   },
@@ -325,18 +329,26 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 16,
     paddingHorizontal: 28,
-    borderRadius: 14,
+    borderRadius: 9999,
   },
   cameraButton: {
-    backgroundColor: colors.cyan[600],
+    backgroundColor: colors.ink,
   },
   galleryButton: {
-    backgroundColor: colors.purple[600],
+    backgroundColor: colors.canvas,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   captureButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.white,
+    letterSpacing: -0.2,
+  },
+  galleryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.ink,
     letterSpacing: -0.2,
   },
   previewContainer: {
@@ -348,10 +360,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     borderRadius: 16,
-    backgroundColor: '#0a0a12',
+    backgroundColor: colors.muted,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   previewImage: {
     width: '100%',
@@ -364,41 +376,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: colors.canvas,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   retakeText: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.white,
+    color: colors.ink,
   },
   labelTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.ink,
     marginBottom: 8,
     letterSpacing: -0.4,
   },
   labelDescription: {
     fontSize: 15,
     fontWeight: '400',
-    color: colors.gray[400],
+    color: colors.smoke,
     marginBottom: 20,
     letterSpacing: -0.2,
   },
   labelInput: {
     width: '100%',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
+    backgroundColor: colors.muted,
+    borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 16,
     fontSize: 17,
     fontWeight: '500',
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    color: colors.ink,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
     marginBottom: 24,
     letterSpacing: -0.2,
   },
@@ -408,14 +422,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: colors.purple[600],
+    backgroundColor: colors.ink,
     paddingVertical: 16,
-    borderRadius: 14,
-    shadowColor: colors.purple[600],
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
+    borderRadius: 9999,
   },
   saveButtonDisabled: {
     opacity: 0.5,

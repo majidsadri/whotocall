@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, StyleSheet, StatusBar } from 'react-native';
 import AppHeader from './AppHeader';
 import LoginModal from './LoginModal';
 import ProfileModal from './ProfileModal';
@@ -16,7 +15,8 @@ export default function ScreenWrapper({ children }: ScreenWrapperProps) {
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.green[900]} translucent />
       <AppHeader
         onLoginPress={openLoginModal}
         onProfilePress={() => setShowProfileModal(true)}
@@ -31,7 +31,7 @@ export default function ScreenWrapper({ children }: ScreenWrapperProps) {
         visible={showProfileModal}
         onClose={() => setShowProfileModal(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

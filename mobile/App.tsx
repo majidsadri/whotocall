@@ -10,13 +10,13 @@ import { colors } from './src/styles/colors';
 
 function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <SafeAreaProvider>
         <AuthProvider>
           <LoginModalProvider>
             <StatusBar
-              barStyle="light-content"
-              backgroundColor={colors.background}
+              barStyle="dark-content"
+              backgroundColor={colors.canvas}
             />
             <AppNavigator />
           </LoginModalProvider>

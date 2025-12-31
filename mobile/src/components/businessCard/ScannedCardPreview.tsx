@@ -42,7 +42,7 @@ export function ScannedCardPreview({
         {/* Scanned indicator */}
         {!isSmall && (
           <View style={styles.scannedBadge}>
-            <Icon name="camera" size={12} color={colors.white} />
+            <Icon name="camera" size={12} color={colors.ink} />
             <Text style={styles.scannedText}>Scanned</Text>
           </View>
         )}
@@ -54,23 +54,24 @@ export function ScannedCardPreview({
 const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
   containerSmall: {
     borderRadius: 12,
-    shadowRadius: 6,
   },
   cardFrame: {
     width: '100%',
     height: 200,
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: colors.gray[900],
+    backgroundColor: colors.muted,
     position: 'relative',
+    borderWidth: 1,
+    borderColor: colors.gray[200],
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardFrameSmall: {
     height: 140,
@@ -84,10 +85,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     left: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: colors.canvas,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   labelBadgeSmall: {
     top: 8,
@@ -98,7 +101,7 @@ const styles = StyleSheet.create({
   labelText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.white,
+    color: colors.ink,
   },
   labelTextSmall: {
     fontSize: 11,
@@ -110,14 +113,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: colors.canvas,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   scannedText: {
     fontSize: 12,
     fontWeight: '500',
-    color: colors.white,
+    color: colors.ink,
   },
 });

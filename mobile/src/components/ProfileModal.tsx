@@ -55,7 +55,7 @@ export default function ProfileModal({ visible, onClose }: ProfileModalProps) {
           </View>
 
           <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut} activeOpacity={0.8}>
-            <Icon name="log-out" size={18} color={colors.red[400]} />
+            <Icon name="log-out" size={18} color={colors.danger} />
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
 
@@ -75,19 +75,21 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   sheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: colors.canvas,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     padding: 24,
     paddingBottom: 40,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.misty,
   },
   handleBar: {
-    width: 40,
+    width: 36,
     height: 4,
-    backgroundColor: colors.gray[600],
+    backgroundColor: colors.misty,
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 24,
@@ -101,49 +103,52 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     marginBottom: 16,
-    borderWidth: 3,
-    borderColor: colors.primary,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   avatarPlaceholder: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.muted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.misty,
   },
   avatarText: {
     fontSize: 32,
-    fontWeight: '700',
-    color: colors.white,
+    fontWeight: '600',
+    color: colors.smoke,
   },
   name: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.ink,
     marginBottom: 4,
+    letterSpacing: -0.4,
   },
   email: {
     fontSize: 15,
-    color: colors.textSecondary,
+    color: colors.smoke,
   },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.red[900],
+    backgroundColor: colors.canvas,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 9999,
     gap: 10,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.red[700],
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.danger,
   },
   signOutText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.red[400],
+    fontWeight: '500',
+    color: colors.danger,
   },
   closeButton: {
     paddingVertical: 12,
@@ -151,7 +156,7 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 16,
-    color: colors.textSecondary,
+    color: colors.smoke,
     fontWeight: '500',
   },
 });

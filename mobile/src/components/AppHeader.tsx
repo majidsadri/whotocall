@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated, Easing } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../styles/colors';
@@ -218,7 +219,7 @@ function AnimatedLogo() {
             { opacity: phoneGlow },
           ]}
         />
-        <Icon name="smartphone" size={22} color="#E5E5E5" />
+        <Icon name="smartphone" size={22} color={colors.white} />
       </Animated.View>
 
       {/* Business Card (foreground) */}
@@ -249,13 +250,14 @@ function AnimatedLogo() {
 
 export default function AppHeader({ onLoginPress, onProfilePress }: AppHeaderProps) {
   const { user, isLoading } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const getAvatarUrl = () => {
     return user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   };
 
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
       {/* Left: Animated Logo + Brand Text */}
       <View style={styles.brandContainer}>
         <View style={styles.logoBox}>
@@ -276,12 +278,12 @@ export default function AppHeader({ onLoginPress, onProfilePress }: AppHeaderPro
             <Image source={{ uri: getAvatarUrl() }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Icon name="user" size={16} color="#E5E5E5" />
+              <Icon name="user" size={16} color={colors.white} />
             </View>
           )
         ) : (
           <View style={styles.loginIcon}>
-            <Icon name="log-in" size={18} color="#9CA3AF" />
+            <Icon name="log-in" size={18} color={colors.white} />
           </View>
         )}
       </TouchableOpacity>
@@ -295,9 +297,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
+    paddingBottom: 14,
+    backgroundColor: colors.gray[800],
   },
   brandContainer: {
     flexDirection: 'row',
@@ -308,11 +309,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#1F1F23',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#2A2A2E',
     overflow: 'hidden',
   },
   logoContainer: {
@@ -331,7 +330,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#60A5FA',
+    backgroundColor: colors.white,
     opacity: 0.4,
   },
   cardWrapper: {
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
   cardIcon: {
     width: 22,
     height: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.white,
     borderRadius: 2,
     flexDirection: 'row',
     alignItems: 'center',
@@ -356,7 +355,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#9CA3AF',
+    backgroundColor: colors.green[500],
   },
   cardLines: {
     flex: 1,
@@ -365,52 +364,48 @@ const styles = StyleSheet.create({
   cardLine: {
     width: '100%',
     height: 2,
-    backgroundColor: '#9CA3AF',
+    backgroundColor: colors.gray[400],
     borderRadius: 1,
   },
   cardLineShort: {
     width: '60%',
     height: 2,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: colors.gray[300],
     borderRadius: 1,
   },
   brandText: {
     fontSize: 22,
-    fontWeight: '300',
-    color: '#E5E5E5',
-    letterSpacing: 3,
+    fontWeight: '600',
+    color: colors.white,
+    letterSpacing: 2,
   },
   profileButton: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   avatar: {
     width: 40,
     height: 40,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#2A2A2E',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   avatarPlaceholder: {
     width: 40,
     height: 40,
-    borderRadius: 12,
-    backgroundColor: '#1F1F23',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#2A2A2E',
   },
   loginIcon: {
     width: 40,
     height: 40,
-    borderRadius: 12,
-    backgroundColor: '#1F1F23',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#2A2A2E',
   },
 });

@@ -1,17 +1,19 @@
-// Theme colors for Reachr - Dark Mode + Vibrant theme
+// Ghost & Carbon Theme - Light Mode
+// Editorial Minimalism design system
+
 export const colors = {
-  // Primary purple palette
+  // Primary palette - Electric Indigo (accent only)
   purple: {
-    50: '#F5F3FF',
-    100: '#EDE9FE',
-    200: '#DDD6FE',
-    300: '#C4B5FD',
-    400: '#A78BFA',
-    500: '#8B5CF6',
-    600: '#7C3AED',
-    700: '#6D28D9',
-    800: '#5B21B6',
-    900: '#4C1D95',
+    50: '#EEF2FF',
+    100: '#E0E7FF',
+    200: '#C7D2FE',
+    300: '#A5B4FC',
+    400: '#818CF8',
+    500: '#6366F1',
+    600: '#4F46E5',
+    700: '#4338CA',
+    800: '#3730A3',
+    900: '#312E81',
   },
 
   // Cyan accent palette
@@ -28,32 +30,32 @@ export const colors = {
     900: '#164E63',
   },
 
-  // Gray palette (dark mode optimized)
+  // Gray palette (light mode optimized)
   gray: {
-    50: '#FAFAFA',
-    100: '#F4F4F5',
-    200: '#E4E4E7',
-    300: '#D4D4D8',
-    400: '#A1A1AA',
-    500: '#71717A',
-    600: '#52525B',
-    700: '#3F3F46',
-    800: '#27272A',
-    900: '#18181B',
+    50: '#F9FAFB',
+    100: '#F3F4F6',
+    200: '#E5E7EB',
+    300: '#D1D5DB',
+    400: '#9CA3AF',
+    500: '#6B7280',
+    600: '#4B5563',
+    700: '#374151',
+    800: '#1F2937',
+    900: '#111827',
   },
 
-  // Green for success states
+  // Teal/Sage palette - Muted seafoam inspired
   green: {
-    50: '#F0FDF4',
-    100: '#DCFCE7',
-    200: '#BBF7D0',
-    300: '#86EFAC',
-    400: '#4ADE80',
-    500: '#22C55E',
-    600: '#16A34A',
-    700: '#15803D',
-    800: '#166534',
-    900: '#14532D',
+    50: '#E8F5F2',
+    100: '#D1EBE6',
+    200: '#A8D8CE',
+    300: '#7FC4B5',
+    400: '#5BAF9C',
+    500: '#5B9A8B',
+    600: '#4A8578',
+    700: '#3A6B60',
+    800: '#2A524A',
+    900: '#1A3A35',
   },
 
   // Blue palette
@@ -109,23 +111,43 @@ export const colors = {
   black: '#000000',
   transparent: 'transparent',
 
-  // Semantic colors - Dark Mode + Vibrant
-  primary: '#7C3AED',
-  primaryLight: '#A78BFA',
-  primaryDark: '#6D28D9',
-  secondary: '#06B6D4',
-  secondaryLight: '#22D3EE',
-  secondaryDark: '#0891B2',
-  accent: '#06B6D4',
-  background: '#121212',
-  surface: '#1E1E1E',
-  surfaceElevated: '#2D2D2D',
-  text: '#F4F4F5',
-  textSecondary: '#A1A1AA',
-  textLight: '#71717A',
-  border: '#3F3F46',
-  borderLight: '#27272A',
-  error: '#EF4444',
-  success: '#22C55E',
+  // ==========================================================================
+  // Ghost & Carbon Semantic Colors - LIGHT MODE
+  // ==========================================================================
+
+  // Core theme colors
+  canvas: '#FFFFFF',       // Primary background
+  muted: '#F9F9FB',        // Subtle backgrounds
+  ink: '#111111',          // Primary text (Carbon)
+  smoke: '#6B7280',        // Secondary text
+  misty: '#EEEEEE',        // Hairlines, borders
+  accent: '#5B9A8B',       // Teal/sage - micro-interactions
+  danger: '#DC2626',       // Destructive actions
+
+  // Legacy semantic mappings (for backward compatibility)
+  primary: '#4A8578',
+  primaryLight: '#7FC4B5',
+  primaryDark: '#3A6B60',
+  secondary: '#6B7280',
+  secondaryLight: '#9CA3AF',
+  secondaryDark: '#4B5563',
+
+  // Background/Surface - LIGHT MODE
+  background: '#FFFFFF',
+  surface: '#F9F9FB',
+  surfaceElevated: '#FFFFFF',
+
+  // Text - LIGHT MODE
+  text: '#111111',
+  textSecondary: '#6B7280',
+  textLight: '#9CA3AF',
+
+  // Borders - LIGHT MODE
+  border: '#EEEEEE',
+  borderLight: '#F3F4F6',
+
+  // Status colors
+  error: '#DC2626',
+  success: '#5B9A8B',
   warning: '#F97316',
 };

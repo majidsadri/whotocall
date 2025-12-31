@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
 import { TemplateId, CARD_TEMPLATES } from '../../types/businessCard';
 import { colors } from '../../styles/colors';
@@ -40,25 +39,22 @@ export function TemplateSelector({ selectedTemplate, onSelectTemplate }: Templat
         );
       case 'gradient':
         return (
-          <LinearGradient
-            colors={[colors.purple[600], colors.cyan[500]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.thumbnail, styles.thumbnailGradient, isSelected && styles.thumbnailSelected]}
-          >
-            <View style={styles.gradientAvatar} />
-            <View style={styles.gradientLines}>
-              <View style={[styles.line, styles.lineLight, { width: '50%' }]} />
-              <View style={[styles.line, styles.lineLight, styles.lineShort, { width: '35%' }]} />
+          <View style={[styles.thumbnail, styles.thumbnailMinimal, isSelected && styles.thumbnailSelected]}>
+            <View style={styles.minimalLayout}>
+              <View style={styles.minimalAvatar} />
+              <View style={styles.minimalLines}>
+                <View style={[styles.line, { width: '70%' }]} />
+                <View style={[styles.line, styles.lineShort, { width: '50%' }]} />
+              </View>
             </View>
-          </LinearGradient>
+          </View>
         );
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Card Design</Text>
+      <Text style={styles.label}>CARD DESIGN</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -94,70 +90,72 @@ export function TemplateSelector({ selectedTemplate, onSelectTemplate }: Templat
 
 const styles = StyleSheet.create({
   container: {
-    gap: 12,
+    gap: 14,
   },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: colors.gray[400],
-    textTransform: 'uppercase',
+    color: colors.gray[500],
     letterSpacing: 0.5,
     paddingHorizontal: 4,
   },
   scrollContent: {
-    gap: 12,
+    gap: 14,
     paddingHorizontal: 4,
   },
   templateOption: {
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   thumbnail: {
-    width: 100,
-    height: 64,
-    borderRadius: 10,
-    padding: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    width: 110,
+    height: 72,
+    borderRadius: 12,
+    padding: 10,
+    backgroundColor: colors.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   thumbnailSelected: {
-    borderColor: colors.purple[500],
+    borderWidth: 2,
+    borderColor: colors.green[600],
+    shadowColor: colors.green[600],
+    shadowOpacity: 0.15,
   },
   thumbnailClassic: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   thumbnailModern: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  thumbnailGradient: {
-    alignItems: 'center',
+  thumbnailMinimal: {
+    backgroundColor: colors.green[50],
     justifyContent: 'center',
   },
   classicAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.purple[600],
-    marginBottom: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.green[100],
+    marginBottom: 6,
   },
   classicLines: {
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
   modernAccent: {
     width: 4,
     height: '100%',
-    backgroundColor: colors.purple[600],
+    backgroundColor: colors.green[500],
     borderRadius: 2,
-    marginRight: 6,
+    marginRight: 8,
   },
   modernContent: {
     flexDirection: 'row',
@@ -165,57 +163,60 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modernAvatar: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.purple[600],
-    marginRight: 6,
-  },
-  modernLines: {
-    flex: 1,
-    gap: 3,
-  },
-  gradientAvatar: {
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    marginBottom: 4,
+    backgroundColor: colors.green[100],
+    marginRight: 8,
   },
-  gradientLines: {
+  modernLines: {
+    flex: 1,
+    gap: 4,
+  },
+  minimalLayout: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    paddingHorizontal: 6,
+  },
+  minimalAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.green[200],
+    marginRight: 8,
+  },
+  minimalLines: {
+    flex: 1,
+    gap: 4,
   },
   line: {
-    height: 4,
-    backgroundColor: colors.gray[600],
-    borderRadius: 2,
+    height: 5,
+    backgroundColor: colors.gray[200],
+    borderRadius: 2.5,
   },
   lineShort: {
-    height: 3,
-  },
-  lineLight: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    height: 4,
+    backgroundColor: colors.gray[150] || colors.gray[100],
   },
   templateInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   templateName: {
     fontSize: 13,
     fontWeight: '500',
-    color: colors.gray[400],
+    color: colors.gray[500],
   },
   templateNameSelected: {
-    color: colors.purple[400],
+    color: colors.green[700],
     fontWeight: '600',
   },
   checkmark: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.purple[600],
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.green[600],
     alignItems: 'center',
     justifyContent: 'center',
   },
